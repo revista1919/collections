@@ -1,0 +1,65 @@
+{
+  "collectionName": "Clásicos de la Ciencia",
+  "articles": [
+    {
+      "id": "CC-2024-0001",
+      "name-original": "Philosophiæ Naturalis Principia Mathematica",
+      "name-translated": "Principios Matemáticos de la Filosofía Natural",
+      "author": [
+        {
+          "name": "Isaac Newton",
+          "birth-date": "04-01-1643",
+          "death-date": "31-03-1727",
+          "bio": "Físico, teólogo, inventor, alquimista y matemático inglés.",
+          "link": "https://es.wikipedia.org/wiki/Isaac_Newton"
+        }
+      ],
+      "date": "05-07-2024",
+      "original-date": "5 de julio de 1687",
+      "editor": [
+        {
+          "name": "Dr. Carlos Martínez",
+          "website": "https://institutodefilosofia.cl/carlos",
+          "orcid": "0000-0002-1825-0097",
+          "email": "carlos.martinez@revistacienciasestudiantes.com"
+        }
+      ],
+      "colaboradores": [
+        {
+          "name": "Ana López",
+          "uid": "ana-lopez-2024",
+          "link": "/team/ana-lopez.html",
+          "orcid": "0000-0003-1234-5678",
+          "email": "ana.lopez@colaborador.com"
+        }
+      ],
+      "abstract": "<p>Los <em>Philosophiæ Naturalis Principia Mathematica</em> (a menudo llamados simplemente los <em>Principia</em>) es la obra maestra de Isaac Newton. En ella, Newton formula las leyes del movimiento y la gravitación universal, creando así la primera gran unificación en la física. Esta traducción al español, preparada por el equipo editorial, incluye notas aclaratorias y un análisis del contexto histórico.</p>",
+      "keywords": ["Física", "Gravitación", "Cálculo", "Siglo XVII", "Historia de la ciencia"],
+      "source": [
+        {
+          "link": "https://archive.org/details/newtonspmathema00newtrich",
+          "citation": "Newton, I. (1687). <em>Philosophiæ Naturalis Principia Mathematica</em>. Londres: Royal Society."
+        }
+      ],
+      "html": "<p>El texto completo de los <em>Principia</em> es extenso. Aquí presentamos una selección de los fragmentos más importantes, centrándonos en las definiciones y las leyes del movimiento.</p><h3>Definiciones</h3><p><strong>Definición I.</strong> La cantidad de materia es la medida de la misma, surgida de su densidad y volumen conjuntamente.</p><p><strong>Definición II.</strong> La cantidad de movimiento es la medida del mismo, surgida de la velocidad y la cantidad de materia conjuntamente.</p><h3>Leyes del Movimiento</h3><p><strong>Ley I.</strong> Todo cuerpo persevera en su estado de reposo o movimiento uniforme y rectilíneo a no ser que sea obligado a cambiar su estado por fuerzas impresas sobre él.</p><p><strong>Ley II.</strong> El cambio de movimiento es proporcional a la fuerza motriz impresa y ocurre según la línea recta a lo largo de la cual esa fuerza se imprime. <span class=\"marginalia\">Esta es la famosa ecuación F = ma expresada en palabras.</span></p><p><strong>Ley III.</strong> Para toda acción hay siempre una reacción igual y contraria: las acciones mutuas de dos cuerpos son siempre iguales y dirigidas en direcciones opuestas.</p>",
+      "references": [
+        {
+          "link": "https://es.wikipedia.org/wiki/Philosophiæ_Naturalis_Principia_Mathematica",
+          "citation": "Wikipedia. (2024). Philosophiæ Naturalis Principia Mathematica."
+        },
+        {
+          "citation": "Westfall, R. S. (1993). <em>Never at Rest: A Biography of Isaac Newton</em>. Cambridge University Press."
+        }
+      ],
+      "number": 1,
+      "apendix": [
+        {
+          "id": "A",
+          "html": "<p>Comentarios sobre la traducción de términos clave como 'quantitas motus' (cantidad de movimiento) vs. 'momentum'.</p>"
+        }
+      ],
+      "editorial-note": "<p>Esta edición se basa en la tercera edición de los <em>Principia</em> (1726), la última revisada por Newton. Hemos modernizado ligeramente la ortografía española para facilitar la lectura, pero conservando la estructura sintáctica original.</p>",
+      "pdf-url": "https://www.revistacienciasestudiantes.com/colections-pdf/cc/cc-2024-0001.pdf"
+    }
+  ]
+}

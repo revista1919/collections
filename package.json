@@ -1,0 +1,40 @@
+{
+  "name": "revista-ciencias-estudiantes",
+  "version": "1.0.0",
+  "description": "Revista Nacional de las Ciencias para Estudiantes - Generadores de contenido estático",
+  "main": "index.js",
+  "scripts": {
+    "generate:classic-science": "node colections/classic-science/generate.cjs",
+    "generate:classic-science:watch": "nodemon colections/classic-science/generate.cjs",
+    "generate:all": "npm run generate:classic-science",
+    "generate:all:watch": "concurrently \"npm:generate:classic-science:watch\"",
+    "clean:classic-science": "rm -rf colections/classic-science/articles/*.html",
+    "clean:all": "npm run clean:classic-science",
+    "build:classic-science": "npm run clean:classic-science && npm run generate:classic-science",
+    "build:all": "npm run clean:all && npm run generate:all",
+    "new:collection": "node scripts/create-collection.js"
+  },
+  "keywords": [
+    "revista",
+    "ciencia",
+    "generador-estático",
+    "colecciones"
+  ],
+  "author": "Revista Nacional de las Ciencias para Estudiantes",
+  "license": "MIT",
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.12",
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1",
+    "concurrently": "^8.2.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "type": "module",
+  "workspaces": [
+    "colections/*"
+  ]
+}

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clásicos de la Ciencia · Archivo</title>
+  <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=IM+Fell+French+Canon:ital@0;1&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --oxford-blue: #002147;
+      --cream: #fdfcf8;
+      --text-main: #2c2c2c;
+      --border: #e4e4e4;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--cream);
+      color: var(--text-main);
+      margin: 0;
+      padding: 0;
+      line-height: 1.6;
+    }
+    .top-bar {
+      background: white;
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .collection-title {
+      font-family: 'IM Fell French Canon', serif;
+      font-size: 1.8rem;
+      color: var(--oxford-blue);
+      font-style: italic;
+      margin: 0;
+    }
+    .main-wrapper {
+      max-width: 1000px;
+      margin: 3rem auto;
+      padding: 0 2rem;
+    }
+    .intro {
+      font-size: 1.1rem;
+      margin-bottom: 3rem;
+      border-left: 3px solid var(--oxford-blue);
+      padding-left: 1.5rem;
+    }
+    .articles-grid {
+      display: grid;
+      gap: 2rem;
+    }
+    .article-card {
+      background: white;
+      padding: 2rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      border-radius: 4px;
+      transition: transform 0.2s, box-shadow 0.2s;
+      border: 1px solid var(--border);
+    }
+    .article-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(0,33,71,0.1);
+    }
+    .article-id {
+      font-family: 'IM Fell English', serif;
+      color: #666;
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+    }
+    .article-title {
+      font-family: 'IM Fell French Canon', serif;
+      font-size: 1.8rem;
+      color: var(--oxford-blue);
+      margin: 0 0 1rem 0;
+      line-height: 1.2;
+    }
+    .article-authors {
+      font-size: 1rem;
+      color: #555;
+      margin-bottom: 1rem;
+    }
+    .article-meta {
+      font-size: 0.9rem;
+      color: #777;
+      display: flex;
+      gap: 1.5rem;
+      margin: 1rem 0;
+    }
+    .btn {
+      display: inline-block;
+      background: var(--oxford-blue);
+      color: white;
+      padding: 0.6rem 1.5rem;
+      text-decoration: none;
+      border-radius: 40px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      border: 1px solid var(--oxford-blue);
+      transition: all 0.2s;
+    }
+    .btn:hover {
+      background: transparent;
+      color: var(--oxford-blue);
+    }
+    footer {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: #777;
+      font-size: 0.9rem;
+      border-top: 1px solid var(--border);
+      margin-top: 4rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <div class="collection-title">Clásicos de la Ciencia</div>
+    <a href="/" style="color:var(--oxford-blue); text-decoration:none; font-size:0.9rem;">← Volver a la revista</a>
+  </div>
+  <div class="main-wrapper">
+    <div class="intro">
+      <p>Ediciones académicas de textos fundamentales de la ciencia. Traducciones realizadas por el equipo editorial, con aparato crítico y notas. Publicación continua.</p>
+    </div>
+    
+    <div class="articles-grid">
+      
+        <div class="article-card">
+          <div class="article-id">CC-2024-0001</div>
+          <h2 class="article-title">Philosophiæ Naturalis Principia Mathematica</h2>
+          <div class="article-authors">Isaac Newton</div>
+          <div class="article-meta">
+            <span>📅 mayo de 2024</span>
+            <span>📄 1</span>
+          </div>
+          <a href="articles/cc-2024-0001.html" class="btn">Leer el clásico →</a>
+        </div>
+      
+    </div>
+  </div>
+  <footer>
+    <p>© 2026 Revista Nacional de las Ciencias para Estudiantes · Colección Clásicos de la Ciencia · Publicación continua · ISSN 3087-2839</p>
+  </footer>
+</body>
+</html>
