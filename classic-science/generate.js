@@ -4447,7 +4447,7 @@ blockquote cite {
   <div class="title-separator"></div>
           
           <!-- METADATA DE ARCHIVO -->
-          <!-- METADATA DE ARCHIVO -->
+
 <div class="archive-metadata">
   ${article['original-date'] ? `
   <div class="meta-column">
@@ -4476,7 +4476,7 @@ blockquote cite {
     <span class="meta-value">${article.idioma || 'No especificado'}</span>
   </div>
 </div>
-
+</div>
         <!-- AUTORES -->
         <div class="authors-section">
           <div class="authors">
