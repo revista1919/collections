@@ -5,8 +5,8 @@ on:
     branches: [main] # O tu rama principal (puede ser 'master')
     paths:
       # Se activa cuando hay cambios en los archivos de la colección
-      - 'colections/classic-science/metadata.json'
-      - 'colections/classic-science/generate.js'
+      - 'collections/classic-science/metadata.json'
+      - 'collections/classic-science/generate.js'
       - '.github/workflows/deploy-classic-science.yml'
       # Opcional: si el package.json cambia (por si se actualizan dependencias)
       - 'package.json'
