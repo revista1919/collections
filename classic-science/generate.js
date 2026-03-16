@@ -4189,10 +4189,10 @@ blockquote cite {
 }
 
 
-/* BOTÓN DESCARGAR — OUTLINE AZUL */
+/* BOTÓN DESCARGAR — OUTLINE AZUL CON FONDO */
 
 .btn-pdf.btn-download {
-  background: transparent;
+  background: rgba(10, 35, 66, 0.06);   /* azul muy suave */
   color: var(--oxford-blue);
   border: 1px solid var(--oxford-blue);
 }
