@@ -1,1238 +1,19 @@
-// ========== collections/classic-science/generate.js ==========
-const fs = require('fs');
-const path = require('path');
-const cheerio = require('cheerio');
-
-// ========== CONFIGURACIÓN ==========
-const METADATA_FILE = path.join(__dirname, 'metadata.json');
-const OUTPUT_DIR = path.join(__dirname, 'articles');
-const DOMAIN = 'https://www.revistacienciasestudiantes.com';
-const JOURNAL_NAME_ES = 'Revista Nacional de las Ciencias para Estudiantes';
-const LOGO_ES = 'https://www.revistacienciasestudiantes.com/assets/logo.png';
-
-// Asegurar que existe el directorio de salida
-if (!fs.existsSync(OUTPUT_DIR)) {
-  fs.mkdirSync(OUTPUT_DIR, { recursive: true });
-}
-
-// ========== MODELO INTERMEDIO DE TABLA (del código antiguo) ==========
-let tableCounter = 1;
-
-function parseTable($, $table) {
-  const table = {
-    id: $table.attr('id') || `table-${tableCounter}`,
-    number: tableCounter++,
-    caption: $table.find('caption').text().trim() || null,
-    class: $table.attr('class') || null,
-    style: $table.attr('style') || null,
-    headers: [],
-    rows: [],
-    columns: 0,
-    footnotes: []
-  };
-
-  const rows = $table.find('tr');
-  let headerProcessed = false;
-
-  rows.each((i, row) => {
-    const rowData = [];
-    
-    $(row).find('th, td').each((j, cell) => {
-      const $cell = $(cell);
-      
-      rowData.push({
-        text: $cell.text().trim().replace(/\s+/g, ' '),
-        html: $cell.html(),
-        colspan: parseInt($cell.attr('colspan')) || 1,
-        rowspan: parseInt($cell.attr('rowspan')) || 1,
-        class: $cell.attr('class') || null,
-        style: $cell.attr('style') || null,
-        align: $cell.attr('align') || null,
-        type: cell.tagName.toLowerCase()
-      });
-    });
-
-    if (!headerProcessed && ($(row).find('th').length > 0 || i === 0)) {
-      table.headers = rowData;
-      headerProcessed = true;
-    } else {
-      table.rows.push(rowData);
-    }
-  });
-
-  table.columns = Math.max(
-    table.headers.length,
-    ...table.rows.map(r => r.reduce((sum, cell) => sum + (cell.colspan || 1), 0))
-  );
-
-  return table;
-}
-
-function formatCSVCell(text) {
-  let cleanText = text.replace(/"/g, '""');
-  return `"${cleanText}"`;
-}
-
-function tableToCSV(table) {
-  const rows = [];
-  if (table.headers.length) {
-    rows.push(table.headers.map(h => formatCSVCell(h.text)).join(','));
-  }
-  table.rows.forEach(row => {
-    rows.push(row.map(cell => formatCSVCell(cell.text)).join(','));
-  });
-  return rows.join('\n');
-}
-
-function tableToJSON(table) {
-  const simpleTable = {
-    number: table.number,
-    caption: table.caption,
-    headers: table.headers.map(h => h.text),
-    rows: table.rows.map(row => row.map(cell => cell.text)),
-    data: []
-  };
-
-  if (table.headers.length) {
-    simpleTable.data = table.rows.map(row => {
-      const obj = {};
-      table.headers.forEach((header, idx) => {
-        const key = header.text
-          .toLowerCase()
-          .replace(/\s+/g, '_')
-          .replace(/[^\w]/g, '');
-        obj[key] = row[idx]?.text || '';
-      });
-      return obj;
-    });
-  }
-
-  return JSON.stringify(simpleTable, null, 2);
-}
-
-function escapeLaTeX(text) {
-  return text
-    .replace(/\\/g, '\\textbackslash ')
-    .replace(/_/g, '\\_')
-    .replace(/&/g, '\\&')
-    .replace(/%/g, '\\%')
-    .replace(/\$/g, '\\$')
-    .replace(/#/g, '\\#')
-    .replace(/{/g, '\\{')
-    .replace(/}/g, '\\}')
-    .replace(/~/g, '\\textasciitilde ')
-    .replace(/\^/g, '\\textasciicircum ');
-}
-
-function tableToLaTeX(table) {
-  if (!table.rows.length && !table.headers.length) return '';
-
-  const alignment = 'l'.repeat(table.columns);
-  let latex = [];
-
-  latex.push('\\begin{table}[h]');
-  latex.push('\\centering');
-  
-  if (table.caption) {
-    latex.push(`\\caption{${escapeLaTeX(table.caption)}}`);
-  }
-  
-  latex.push(`\\label{tab:${table.number}}`);
-  latex.push(`\\begin{tabular}{|${alignment.split('').join('|')}|}`);
-  latex.push('\\hline');
-
-  if (table.headers.length) {
-    const headerLine = table.headers
-      .map(h => escapeLaTeX(h.text))
-      .join(' & ');
-    latex.push(headerLine + ' \\\\');
-    latex.push('\\hline');
-  }
-
-  table.rows.forEach(row => {
-    const rowLine = row
-      .map(cell => escapeLaTeX(cell.text))
-      .join(' & ');
-    latex.push(rowLine + ' \\\\');
-    latex.push('\\hline');
-  });
-
-  latex.push('\\end{tabular}');
-  latex.push('\\end{table}');
-
-  return latex.join('\n');
-}
-
-function escapeXML(text) {
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;');
-}
-
-function tableToXML(table) {
-  let xml = [];
-  
-  xml.push('<?xml version="1.0" encoding="UTF-8"?>');
-  xml.push(`<table id="${table.id}" number="${table.number}" xmlns="http://www.w3.org/1999/xhtml">`);
-
-  if (table.caption) {
-    xml.push(`  <caption>${escapeXML(table.caption)}</caption>`);
-  }
-
-  if (table.headers.length) {
-    xml.push('  <thead>');
-    xml.push('    <tr>');
-    table.headers.forEach(header => {
-      xml.push(`      <th>${escapeXML(header.text)}</th>`);
-    });
-    xml.push('    </tr>');
-    xml.push('  </thead>');
-  }
-
-  xml.push('  <tbody>');
-  table.rows.forEach(row => {
-    xml.push('    <tr>');
-    row.forEach(cell => {
-      xml.push(`      <td>${escapeXML(cell.text)}</td>`);
-    });
-    xml.push('    </tr>');
-  });
-  xml.push('  </tbody>');
-  
-  xml.push('</table>');
-
-  return xml.join('\n');
-}
-
-function tableToExcel(table, $) {
-  // Si table es un modelo, generar HTML de la tabla
-  if (table && table.headers && table.rows) {
-    let html = '<table>';
-    if (table.caption) html += `<caption>${table.caption}</caption>`;
-    if (table.headers.length) {
-      html += '<thead><tr>';
-      table.headers.forEach(header => {
-        html += `<th>${header.text}</th>`;
-      });
-      html += '</tr></thead>';
-    }
-    html += '<tbody>';
-    table.rows.forEach(row => {
-      html += '<tr>';
-      row.forEach(cell => {
-        html += `<td>${cell.text}</td>`;
-      });
-      html += '</tr>';
-    });
-    html += '</tbody></table>';
-    return html;
-  }
-  
-  // Si es un objeto cheerio, usar su HTML
-  if ($ && $.html) {
-    return $.html();
-  }
-  
-  return '';
-}
-function resetTableCounter() {
-  tableCounter = 1;
-}
-
-// ========== ICONOS Y SVG ==========
-const orcidSvg = `<svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" width="16" height="16"> <circle cx="128" cy="128" r="120" fill="#A6CE39"/> <g fill="#FFFFFF"> <rect x="71" y="78" width="17" height="102"/> <circle cx="79.5" cy="56" r="11"/> <path d="M103 78 v102 h41.5 c28.2 0 51-22.8 51-51 s-22.8-51-51-51 H103 zm17 17 h24.5 c18.8 0 34 15.2 34 34 s-15.2 34-34 34 H120 V95 z" fill-rule="evenodd"/> </g> </svg>`;
-
-const emailSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>`;
-
-const oaSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 500 260" style="vertical-align: middle;"><g transform="matrix(1.25 0 0 -1.25 0 360)"><path d="M262.883 200.896v-8.846h25.938v8.846c0 21.412 17.421 38.831 38.831 38.831 21.409 0 38.829-17.419 38.829-38.831v-63.985h25.939v63.985c0 35.713-29.056 64.769-64.768 64.769-35.711 0-64.769-29.056-64.769-64.769M349.153 99.568c0-11.816-9.58-21.396-21.399-21.396-11.818 0-21.398 9.58-21.398 21.396 0 11.823 9.58 21.404 21.398 21.404 11.819 0 21.399-9.581 21.399-21.404" fill="#f68212"/><path d="M277.068 99.799c0 27.811 22.627 50.436 50.438 50.436 27.809 0 50.433-22.625 50.433-50.436 0-27.809-22.624-50.438-50.433-50.438-27.811.001-50.438 22.63-50.438 50.438m-25.938 0c0-42.109 34.265-76.373 76.375-76.373 42.111 0 76.373 34.265 76.373 76.373 0 42.113-34.262 76.375-76.373 76.375-42.11 0-76.375-34.262-76.375-76.375" fill="#f68212"/></g></svg>`;
-
-const ccLogoSvg = `<img src="https://bibliotecas.ucn.cl/wp-content/uploads/2025/04/by1.png" alt="CC BY 4.0" style="height: 1.2em; width: auto; vertical-align: middle;">`;
-
-// Nuevo ícono para notas marginales (más intuitivo que ⦿)
-const marginNoteIcon = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="display: inline-block; vertical-align: middle;"><circle cx="8" cy="8" r="6"/><path d="M8 4v5M8 11v1"/></svg>`;
-
-// ========== SOCIAL LINKS E ICONOS ==========
-const socialIcons = {
-  instagram: `<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073z"/><path d="M12 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4z"/><circle cx="18.406" cy="5.594" r="1.44"/></svg>`,
-  youtube: `<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>`,
-  tiktok: `<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M12.53.02C13.84 0 15.14.01 16.44 0c.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>`,
-  spotify: `<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.508 17.308c-.221.362-.689.473-1.05.252-2.983-1.823-6.738-2.237-11.162-1.226-.411.094-.823-.162-.917-.573-.094-.412.162-.823.573-.917 4.847-1.108 8.995-.635 12.305 1.386.36.221.472.69.251 1.05zm1.47-3.255c-.278.452-.865.594-1.317.316-3.414-2.098-8.62-2.706-12.657-1.479-.508.154-1.04-.136-1.194-.644-.154-.508.136-1.04.644-1.194 4.613-1.399 10.366-.719 14.256 1.67.452.278.594.865.316 1.317zm.126-3.374C14.653 7.64 7.29 7.394 3.05 8.681c-.604.183-1.246-.166-1.429-.77-.183-.604.166-1.246.77-1.429 4.883-1.482 13.014-1.201 18.238 1.902.544.323.72 1.034.397 1.578-.323.544-1.034.72-1.578.397z"/></svg>`
-};
-
-const socialLinks = {
-  instagram: 'https://www.instagram.com/revistanacionalcienciae',
-  youtube: 'https://www.youtube.com/@RevistaNacionaldelasCienciaspa',
-  tiktok: 'https://www.tiktok.com/@revistacienciaestudiante',
-  spotify: 'https://open.spotify.com/show/6amsgUkNXgUTD219XpuqOe'
-};
-
-// ========== UTILIDADES ==========
-function generateSlug(text) {
-  if (!text) return '';
-  return text.toLowerCase()
-    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-}
-
-function formatDate(dateStr) {
-  if (!dateStr) return 'N/A';
-  return new Date(dateStr).toLocaleDateString('es-CL', { 
-    day: '2-digit', 
-    month: '2-digit', 
-    year: 'numeric' 
-  });
-}
-// ========== FUNCIÓN MEJORADA PARA PROCESAR NOTAS MARGINALES (MÓVIL Y ESCRITORIO) ==========
-function processNotes($, marginNotesArray) {
-  if (!$) return { marginNotes: [] };
-  
-  let noteCounter = 1;
-  let marginCounter = 1;
-  
-  // Procesar notas al pie estándar
-  $('sup, .footnote, .note, .footnotemark').each((i, el) => {
-    const $el = $(el);
-    const noteId = `note-${noteCounter}`;
-    const refId = `note-ref-${noteCounter}`;
-    
-    $el.attr('id', refId);
-    
-    const noteText = $el.text();
-    const noteHtml = `
-      <a href="#${noteId}" class="footnote-link" id="${refId}">
-        <sup>[${noteCounter}]</sup>
-      </a>
-      <span class="footnote-content" id="${noteId}">
-        ${noteText}
-        <a href="#${refId}" class="footnote-back">↩</a>
-      </span>
-    `;
-    
-    $el.replaceWith(noteHtml);
-    noteCounter++;
-  });
-  
-  // PROCESAR NOTAS MARGINALES - VERSIÓN UNIFICADA
-  $('.marginal-note, .sidenote, .margin-note').each((i, el) => {
-    const $el = $(el);
-    const marginId = `margin-${marginCounter}`;
-    const noteText = $el.html();
-    
-    // Guardar para la sidebar derecha y sección móvil
-    marginNotesArray.push({
-      id: marginId,
-      text: noteText,
-      number: marginCounter
-    });
-    
-    // Crear indicador visible con función unificada
-    const marginIndicator = `
-      <span id="${marginId}" class="margin-note-indicator-wrapper">
-        <a href="#" class="margin-note-link" onclick="event.preventDefault(); openMarginNote('${marginId}', ${marginCounter});" title="Ver nota marginal">
-          <span class="margin-note-badge">[Nota ${marginCounter}]</span>
-        </a>
-      </span>
-    `;
-    
-    $el.replaceWith(marginIndicator);
-    marginCounter++;
-  });
-  
-  return marginNotesArray;
-}
-// ========== FUNCIÓN PARA PROCESAR CONTENIDO RICO (CON MÁS FORMATOS DE TABLA) ==========
-function processRichContent($, specialElementsArray) {
-  if (!$) return specialElementsArray;
-  
-  let figureIndex = 0;
-  let tableIndex = 0;
-  let codeIndex = 0;
-  let equationIndex = 0;
-  
-  // ===== PROCESAR BLOQUES DE CÓDIGO (igual que antes, pero con SVG en lugar de emojis) =====
-  $('pre').each((i, el) => {
-    const $el = $(el);
-    
-    if ($el.parent().hasClass('code-block-wrapper')) {
-      return;
-    }
-    
-    let $codeElement = $el.find('code').first();
-    let code;
-    let language = '';
-    
-    if ($codeElement.length > 0) {
-      code = $codeElement.text();
-      const classAttr = $codeElement.attr('class') || '';
-      if (classAttr.includes('language-')) {
-        language = classAttr.split('language-')[1].split(' ')[0];
-      } else if (classAttr.includes('lang-')) {
-        language = classAttr.split('lang-')[1].split(' ')[0];
-      }
-    } else {
-      code = $el.text();
-    }
-    
-    const lines = code.split('\n');
-    const lineCount = lines.length;
-    
-    let lineNumbersHtml = '';
-    for (let i = 1; i <= lineCount; i++) {
-      lineNumbersHtml += `<span class="code-line-number">${i}</span>`;
-    }
-    
-    codeIndex++;
-    const codeId = `code-${codeIndex}`;
-    
-    specialElementsArray.push({
-      type: 'code',
-      id: codeId,
-      title: language ? `Código (${language})` : `Código ${codeIndex}`
-    });
-    
-    const escapedCode = code.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    
-    // SVG para el botón copiar (en lugar de emoji)
-    const copySvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
-    
-    const codeHtml = `
-      <div class="code-block-wrapper" id="${codeId}">
-        <div class="code-header">
-          <span class="code-language">${language || 'código'}</span>
-          <button class="code-copy-btn" onclick="copyCode('${codeId}', this)" title="Copiar código">
-            ${copySvg}
-            <span class="copy-text">Copiar</span>
-          </button>
-        </div>
-        <div class="code-block-container">
-          <div class="code-line-numbers" aria-hidden="true">
-            ${lineNumbersHtml}
-          </div>
-          <pre class="code-block ${language ? `language-${language}` : ''}"><code class="${language ? `language-${language}` : ''}">${escapedCode}</code></pre>
-        </div>
-      </div>
-    `;
-    
-    $el.replaceWith(codeHtml);
-  });
-    // ===== PROCESAR TABLAS CON MÚLTIPLES FORMATOS DE DESCARGA =====
-  // ELIMINADO: let tableIndex = 0;
-  // ELIMINADO: resetTableCounter();
-
-  $('table').each((i, el) => {
-    const $el = $(el);
-    
-    if ($el.parent().hasClass('table-download-wrapper')) {
-      return;
-    }
-    
-    // --- INICIO DE LOS CAMBIOS ---
-    // 1. Llamamos a parseTable PRIMERO. Ella incrementará el contador y nos devolverá el modelo.
-    const tableModel = parseTable($, $el);
-    
-    // 2. Obtenemos el número de tabla desde el modelo recién creado.
-    const tableNumber = tableModel.number;
-    
-    // 3. Generamos el ID y lo asignamos, usando el número correcto del modelo.
-    const tableId = `table-${tableNumber}`;
-    $el.attr('id', tableId);
-    $el.addClass('article-table');
-    // --- FIN DE LOS CAMBIOS ---
-    
-    specialElementsArray.push({
-      type: 'table',
-      id: tableId,
-      title: tableModel.caption || `Tabla ${tableNumber}` // Usamos tableNumber
-    });
-    
-    const csvContent = tableToCSV(tableModel);
-    const jsonContent = tableToJSON(tableModel);
-    const latexContent = tableToLaTeX(tableModel);
-    const xmlContent = tableToXML(tableModel);
-    const excelContent = tableToExcel(tableModel);
-    
-    const BOM = '\uFEFF';
-    
-    // SVG icons para los botones (sin cambios)
-    const csvSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12h6"/><path d="M9 16h6"/><path d="M9 8h3"/><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>`;
-    const excelSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>`;
-    const jsonSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 20c-1.5 0-2.5-1-2.5-2.5v-3.5c0-1-1-1.5-2-1.5s-2-.5-2-1.5v-1c0-1 1-1.5 2-1.5s2-.5 2-1.5v-3.5c0-1.5 1-2.5 2.5-2.5"/><path d="M14 4c1.5 0 2.5 1 2.5 2.5v3.5c0 1 1 1.5 2 1.5s2 .5 2 1.5v1c0 1-1 1.5-2 1.5s-2 .5-2 1.5v3.5c0 1.5-1 2.5-2.5 2.5"/></svg>`;
-    const latexSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 4h-12l7 8-7 8h12"/></svg>`;
-    const xmlSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>`;
-    
-    // En la función processRichContent, dentro del bucle que procesa las tablas
-const tableWrapper = `
-  <div class="table-download-wrapper" id="${tableId}-wrapper">
-    <div class="table-header">
-      <span class="table-label">Tabla ${tableNumber}${tableModel.caption ? ': ' + tableModel.caption : ''}</span>
-      <div class="table-download-buttons">
-        <a href="data:text/csv;charset=utf-8,${encodeURIComponent(BOM + csvContent)}"
-           download="tabla-${tableNumber}.csv"
-           class="table-download-btn" title="Descargar como CSV">
-          ${csvSvg}
-          <span>CSV</span>
-        </a>
-        <a href="data:application/vnd.ms-excel;charset=utf-8,${encodeURIComponent(BOM + excelContent)}"
-           download="tabla-${tableNumber}.xls"
-           class="table-download-btn" title="Descargar como Excel">
-          ${excelSvg}
-          <span>Excel</span>
-        </a>
-        <a href="data:application/json;charset=utf-8,${encodeURIComponent(jsonContent)}"
-           download="tabla-${tableNumber}.json"
-           class="table-download-btn" title="Descargar como JSON">
-          ${jsonSvg}
-          <span>JSON</span>
-        </a>
-        <a href="data:text/plain;charset=utf-8,${encodeURIComponent(latexContent)}"
-           download="tabla-${tableNumber}.tex"
-           class="table-download-btn" title="Descargar como LaTeX">
-          ${latexSvg}
-          <span>LaTeX</span>
-        </a>
-        <a href="data:application/xml;charset=utf-8,${encodeURIComponent(xmlContent)}"
-           download="tabla-${tableNumber}.xml"
-           class="table-download-btn" title="Descargar como XML">
-          ${xmlSvg}
-          <span>XML</span>
-        </a>
-      </div>
-    </div>
-    <div class="table-wrapper">
-      ${$.html($el)}
-    </div>
-  </div>
-`;
-    
-    $el.replaceWith(tableWrapper);
-  });
-  
-  // ===== PROCESAR IMÁGENES (CON SVG EN LUGAR DE EMOJIS) =====
-  $('img').each((i, el) => {
-    const $el = $(el);
-    
-    if ($el.parent().hasClass('image-link') || $el.parent().is('a')) {
-      return;
-    }
-    
-    const alt = $el.attr('alt') || '';
-    const src = $el.attr('src') || '';
-    const style = $el.attr('style') || '';
-    const align = $el.attr('align') || '';
-    
-    $el.addClass('article-image');
-    
-    let floatClass = '';
-    if (style.includes('float: left') || align === 'left') {
-      floatClass = ' float-left';
-    } else if (style.includes('float: right') || align === 'right') {
-      floatClass = ' float-right';
-    }
-    
-    figureIndex++;
-    const figureId = `figure-${figureIndex}`;
-    
-    specialElementsArray.push({
-      type: 'figure',
-      id: figureId,
-      title: alt || `Figura ${figureIndex}`
-    });
-    
-    if (src) {
-      $el.wrap(`<a href="${src}" target="_blank" rel="noopener noreferrer" class="image-link"></a>`);
-    }
-    
-    if (alt) {
-      $el.parent().wrap(`<figure class="image-figure${floatClass}" id="${figureId}"></figure>`);
-      $el.parent().after(`<figcaption class="image-caption">${alt}</figcaption>`);
-    } else {
-      $el.parent().wrap(`<figure class="image-figure${floatClass}" id="${figureId}"></figure>`);
-    }
-  });
-  
-  // ===== PROCESAR ECUACIONES =====
-  $('.MathJax_Display, .math-container, .equation').each((i, el) => {
-    const $el = $(el);
-    
-    if ($el.attr('id') && $el.attr('id').startsWith('equation-')) {
-      return;
-    }
-    
-    equationIndex++;
-    const equationId = `equation-${equationIndex}`;
-    $el.attr('id', equationId);
-    
-    specialElementsArray.push({
-      type: 'equation',
-      id: equationId,
-      title: `Ecuación ${equationIndex}`
-    });
-  });
-  
-  return specialElementsArray;
-}
-
-// ========== FUNCIÓN PARA PROCESAR AUTORES CON ICONOS ==========
-function processAuthorsWithIcons(authors) {
-  if (!authors || !Array.isArray(authors)) return 'Autor desconocido';
-  
-  return authors.map(author => {
-    let authorHtml = '';
-    
-    if (author.link) {
-      authorHtml += `<a href="${author.link}" target="_blank" rel="noopener" class="author-link">${author.name}</a>`;
-    } else {
-      authorHtml += `<span class="author-name">${author.name}</span>`;
-    }
-    
-    // Añadir icono de información con modal
-    authorHtml += `<span class="author-info-icon" onclick="openAuthorModal('${generateSlug(author.name)}')" title="Información del autor">ⓘ</span>`;
-    
-    // Añadir iconos de ORCID y email si existen
-    const icons = [];
-    if (author.orcid) {
-      icons.push(`<a href="https://orcid.org/${author.orcid}" target="_blank" class="author-icon orcid-icon" title="ORCID">${orcidSvg}</a>`);
-    }
-    if (author.email) {
-      icons.push(`<a href="mailto:${author.email}" class="author-icon email-icon" title="Email">${emailSvg}</a>`);
-    }
-    
-    if (icons.length > 0) {
-      authorHtml += `<span class="author-icons">${icons.join('')}</span>`;
-    }
-    
-    return authorHtml;
-  }).join('<span class="author-separator">, </span>');
-}
-
-// ========== FUNCIÓN PARA GENERAR MODALES DE AUTORES ==========
-function generateAuthorModals(authors) {
-  if (!authors || !Array.isArray(authors)) return '';
-  
-  return authors.map(author => {
-    const authorId = generateSlug(author.name);
-    const birthDate = author['birth-date'] ? formatDate(author['birth-date']) : 'Desconocida';
-    const deathDate = author['death-date'] ? formatDate(author['death-date']) : '—';
-    
-    return `
-    <div id="author-modal-${authorId}" class="author-modal">
-      <div class="author-modal-content">
-        <span class="author-modal-close" onclick="closeAuthorModal('${authorId}')">&times;</span>
-        <h3>${author.name}</h3>
-        <p class="author-dates">${birthDate} - ${deathDate}</p>
-        <div class="author-bio">${author.bio || 'Sin biografía disponible.'}</div>
-        ${author.link ? `<p><a href="${author.link}" target="_blank" rel="noopener">Ver perfil externo →</a></p>` : ''}
-      </div>
-    </div>
-    `;
-  }).join('');
-}
-
-// ========== FUNCIÓN PARA PROCESAR COLABORADORES ==========
-function processCollaborators(colaboradores) {
-  if (!colaboradores || !Array.isArray(colaboradores)) return '';
-  
-  return colaboradores.map(col => {
-    let colHtml = `<div class="collaborator-item">`;
-    colHtml += `<span class="collaborator-name">`;
-    
-    if (col.link) {
-      colHtml += `<a href="${col.link}" target="_blank" rel="noopener">${col.name}</a>`;
-    } else {
-      colHtml += col.name;
-    }
-    
-    colHtml += `</span>`;
-    colHtml += `<span class="collaborator-role">${col.role || 'Colaborador'}</span>`;
-    
-    const icons = [];
-    if (col.orcid) {
-      icons.push(`<a href="https://orcid.org/${col.orcid}" target="_blank" class="author-icon" title="ORCID">${orcidSvg}</a>`);
-    }
-    if (col.email) {
-      icons.push(`<a href="mailto:${col.email}" class="author-icon" title="Email">${emailSvg}</a>`);
-    }
-    
-    if (icons.length > 0) {
-      colHtml += `<span class="author-icons">${icons.join('')}</span>`;
-    }
-    
-    colHtml += `</div>`;
-    return colHtml;
-  }).join('');
-}
-// ========== FUNCIÓN PARA GENERAR TOC CON IDS CORRECTOS ==========
-function generateTOC(html, specialElements = []) {
-  if (!html) return [];
-  
-  const $ = cheerio.load(html, { decodeEntities: false });
-  const toc = [];
-  const usedIds = new Set(); // Para evitar IDs duplicados
-  
-  // Primero, los encabezados h2, h3, h4
-  $('h2, h3, h4').each((i, el) => {
-    const $el = $(el);
-    const level = parseInt(el.tagName[1]);
-    let text = $el.text().trim();
-    
-    if (!text) return; // Saltar encabezados vacíos
-    
-    // Generar ID único basado en el texto
-    let baseId = generateSlug(text);
-    let id = baseId;
-    let counter = 1;
-    
-    // Asegurar unicidad
-    while (usedIds.has(id)) {
-      id = `${baseId}-${counter}`;
-      counter++;
-    }
-    
-    usedIds.add(id);
-    $el.attr('id', id);
-    
-    toc.push({
-      level,
-      id,
-      text,
-      type: 'heading'
-    });
-  });
-  
-  return toc;
-}
-
-// ========== FUNCIÓN PARA FORMATEAR FECHA CORRECTAMENTE ==========
-function formatDate(dateStr) {
-  if (!dateStr) return 'N/A';
-  
-  // Intentar parsear la fecha
-  try {
-    // Si es formato DD-MM-YYYY
-    if (dateStr.match(/^\d{2}-\d{2}-\d{4}$/)) {
-      const [day, month, year] = dateStr.split('-');
-      return new Date(year, month-1, day).toLocaleDateString('es-CL', { 
-        day: '2-digit', 
-        month: '2-digit', 
-        year: 'numeric' 
-      });
-    }
-    
-    // Si es formato ISO
-    const date = new Date(dateStr);
-    if (!isNaN(date.getTime())) {
-      return date.toLocaleDateString('es-CL', { 
-        day: '2-digit', 
-        month: '2-digit', 
-        year: 'numeric' 
-      });
-    }
-    
-    return dateStr; // Devolver el string original si no se puede parsear
-  } catch (e) {
-    return dateStr;
-  }
-}
-
-// ========== FUNCIÓN PARA PROCESAR CITAS CON FECHAS Y ROLES CORRECTOS ==========
-function processCitations(article) {
-  if (!article) return {};
-  
-  // Formatear fechas correctamente
-  const originalDate = article['original-date'] || '';
-  const publicationDate = article.date ? formatDate(article.date) : formatDate(new Date());
-  
-  // Extraer año de publicación original
-  let originalYear = 's.f.';
-  if (originalDate) {
-    try {
-      if (originalDate.match(/^\d{2}-\d{2}-\d{4}$/)) {
-        originalYear = originalDate.split('-')[2];
-      } else {
-        const date = new Date(originalDate);
-        if (!isNaN(date.getTime())) {
-          originalYear = date.getFullYear().toString();
-        }
-      }
-    } catch (e) {
-      originalYear = originalDate;
-    }
-  }
-  
-  // Año de la traducción (usar fecha actual o la del artículo)
-  const translationYear = article.date ? 
-    (article.date.match(/^\d{2}-\d{2}-\d{4}$/) ? article.date.split('-')[2] : new Date().getFullYear().toString()) : 
-    new Date().getFullYear().toString();
-  
-  // Obtener autor principal
-  let authorFormatted = 'Autor desconocido';
-  let authorLastName = 'Autor';
-  let authorInitial = 'A.';
-  
-  if (article.author && article.author[0]) {
-    const author = article.author[0];
-    const nameParts = author.name.split(' ');
-    
-    if (nameParts.length >= 2) {
-      // Asumimos que el apellido es la última palabra
-      authorLastName = nameParts.pop();
-      authorInitial = nameParts[0].charAt(0) + '.';
-      authorFormatted = `${authorLastName}, ${authorInitial}`;
-    } else {
-      authorLastName = author.name;
-      authorInitial = author.name.charAt(0) + '.';
-      authorFormatted = author.name;
-    }
-  }
-  
-  // Obtener traductor (de colaboradores con rol "Traductor")
-  let translator = null;
-  if (article.colaboradores && Array.isArray(article.colaboradores)) {
-    const translatorObj = article.colaboradores.find(col => 
-      col.role && col.role.toLowerCase().includes('traductor')
-    );
-    if (translatorObj) {
-      translator = translatorObj.name;
-    }
-  }
-  
-  // Si no hay traductor en colaboradores, buscar en editores
-  if (!translator && article.editor && Array.isArray(article.editor)) {
-    // Podríamos asumir que el primer editor es el traductor si no se especifica
-    // Pero mejor dejarlo como null
-  }
-  
-  // Obtener editor(es)
-  let editors = [];
-  if (article.editor && Array.isArray(article.editor)) {
-    editors = article.editor.map(ed => ed.name);
-  }
-  
-  // Títulos
-  const titleTranslated = article['name-translated'] || article['name-original'];
-  const titleOriginal = article['name-original'] || '';
-  
-  // URL del artículo
-  const articleUrl = article.id ? 
-    `https://www.revistacienciasestudiantes.com/collections/classic-science/articles/${article.id}.html` : 
-    '';
-  
-  // Formato APA: Autor original. (Año de la traducción). Título del texto traducido 
-  // (Nombre del traductor, Trad.; Nombre del editor, Ed.). Nombre de la revista, Colección o serie editorial. URL
-  let apaCitation = '';
-  if (translator && editors.length > 0) {
-    // Con traductor y editor
-    apaCitation = `${authorFormatted} (${translationYear}). ${titleTranslated} (${translator}, Trad.; ${editors.join(' & ')}, Eds.). <em>Clásicos de la Ciencia</em>. ${articleUrl}`;
-  } else if (translator) {
-    // Solo traductor
-    apaCitation = `${authorFormatted} (${translationYear}). ${titleTranslated} (${translator}, Trad.). <em>Clásicos de la Ciencia</em>. ${articleUrl}`;
-  } else if (editors.length > 0) {
-    // Solo editor
-    apaCitation = `${authorFormatted} (${translationYear}). ${titleTranslated} (${editors.join(' & ')}, Eds.). <em>Clásicos de la Ciencia</em>. ${articleUrl}`;
-  } else {
-    // Sin traductor ni editor
-    apaCitation = `${authorFormatted} (${translationYear}). ${titleTranslated}. <em>Clásicos de la Ciencia</em>. ${articleUrl}`;
-  }
-  
-  // Formato MLA: Autor original. "Título del texto traducido." Nombre de la revista, 
-  // traducido por Nombre Apellido, editado por Nombre Apellido, colección editorial, año, URL.
-  let mlaCitation = '';
-  const authorFull = article.author && article.author[0] ? article.author[0].name : 'Autor desconocido';
-  
-  if (translator && editors.length > 0) {
-    // Con traductor y editor
-    mlaCitation = `${authorFull}. "${titleTranslated}." <em>Clásicos de la Ciencia</em>, traducido por ${translator}, editado por ${editors.join(' y ')}, ${translationYear}, ${articleUrl}.`;
-  } else if (translator) {
-    // Solo traductor
-    mlaCitation = `${authorFull}. "${titleTranslated}." <em>Clásicos de la Ciencia</em>, traducido por ${translator}, ${translationYear}, ${articleUrl}.`;
-  } else if (editors.length > 0) {
-    // Solo editor
-    mlaCitation = `${authorFull}. "${titleTranslated}." <em>Clásicos de la Ciencia</em>, editado por ${editors.join(' y ')}, ${translationYear}, ${articleUrl}.`;
-  } else {
-    // Sin traductor ni editor
-    mlaCitation = `${authorFull}. "${titleTranslated}." <em>Clásicos de la Ciencia</em>, ${translationYear}, ${articleUrl}.`;
-  }
-  
-  // Formato Chicago: Autor original. "Título del texto traducido." Traducido por Nombre Apellido. 
-  // Editado por Nombre Apellido. Nombre de la revista, colección editorial, Año. URL.
-  let chicagoCitation = '';
-  
-  if (translator && editors.length > 0) {
-    // Con traductor y editor
-    chicagoCitation = `${authorFull}. "${titleTranslated}." Traducido por ${translator}. Editado por ${editors.join(' y ')}. <em>Clásicos de la Ciencia</em>, ${translationYear}. ${articleUrl}.`;
-  } else if (translator) {
-    // Solo traductor
-    chicagoCitation = `${authorFull}. "${titleTranslated}." Traducido por ${translator}. <em>Clásicos de la Ciencia</em>, ${translationYear}. ${articleUrl}.`;
-  } else if (editors.length > 0) {
-    // Solo editor
-    chicagoCitation = `${authorFull}. "${titleTranslated}." Editado por ${editors.join(' y ')}. <em>Clásicos de la Ciencia</em>, ${translationYear}. ${articleUrl}.`;
-  } else {
-    // Sin traductor ni editor
-    chicagoCitation = `${authorFull}. "${titleTranslated}." <em>Clásicos de la Ciencia</em>, ${translationYear}. ${articleUrl}.`;
-  }
-  
-  // Formato BibTeX
-  let bibtexCitation = `@article{${generateSlug(authorLastName)}_${originalYear}_${generateSlug(titleTranslated).substring(0, 20)},
-  author       = {${article.author && article.author[0] ? article.author[0].name : 'Autor Desconocido'}},
-  title        = {${titleTranslated}},
-  journaltitle = {Revista Nacional de las Ciencias para Estudiantes},
-  series       = {Clásicos de la Ciencia},`;
-  
-  if (translator) {
-    bibtexCitation += `\n  translator   = {${translator}},`;
-  }
-  
-  if (editors.length > 0) {
-    bibtexCitation += `\n  editor       = {${editors.join(' and ')}},`;
-  }
-  
-  bibtexCitation += `\n  year         = {${translationYear}},`;
-  
-  if (originalYear !== 's.f.') {
-    bibtexCitation += `\n  origdate     = {${originalYear}},`;
-  }
-  
-  bibtexCitation += `\n  url          = {${articleUrl}}
-}`;
-  
-  return {
-    apa: apaCitation,
-    mla: mlaCitation,
-    chicago: chicagoCitation,
-    bibtex: bibtexCitation,
-    originalDate: originalDate,
-    publicationDate: publicationDate
-  };
-}
-// ========== FUNCIÓN PRINCIPAL DE GENERACIÓN ==========
-async function generateAll() {
-  console.log('🚀 Iniciando generación de la colección "Clásicos de la Ciencia"...');
-  
-  try {
-    // 1. Leer metadata.json
-    if (!fs.existsSync(METADATA_FILE)) {
-      throw new Error(`No se encuentra ${METADATA_FILE}`);
-    }
-    
-    const articles = JSON.parse(fs.readFileSync(METADATA_FILE, 'utf8'));
-    console.log(`📄 ${articles.length} artículos cargados`);
-
-    // 2. Generar HTML para cada artículo
-    for (const article of articles) {
-      await generateArticleHtml(article);
-    }
-
-    // 3. Generar índice de la colección
-    generateCollectionIndex(articles);
-
-    console.log('🎉 ¡Proceso completado con éxito!');
-    
-  } catch (err) {
-    console.error('❌ Error:', err);
-    process.exit(1);
-  }
-}
-async function generateArticleHtml(article) {
-  // Validar ID
-  if (!article.id || !article.id.match(/^CC-\d{4}-\d{4}$/)) {
-    console.warn(`⚠️ ID inválido para artículo: ${article.id || 'sin ID'}`);
-  }
-  
-  const articleSlug = generateSlug(article['name-translated'] || article['name-original']);
-  const outputFile = path.join(OUTPUT_DIR, `${article.id}.html`);
-  
-  // --- NUEVO: Arrays para recolectar elementos de TODAS las secciones ---
-  const allMarginNotes = [];
-  const allSpecialElements = [];
-  
-  function processHtmlFragment(htmlContent, prefix = '') {
-  if (!htmlContent) return { processed: '', marginNotes: [], specialElements: [] };
-  
-  // PASO 1: Limpieza EXTREMA - eliminar TODAS las etiquetas de documento
-  let cleanedHtml = htmlContent
-    // Eliminar DOCTYPE
-    .replace(/<!DOCTYPE[^>]*>/gi, '')
-    // Eliminar TODAS las etiquetas html, head, body con o sin atributos
-    .replace(/<html[^>]*>/gi, '')
-    .replace(/<\/html>/gi, '')
-    .replace(/<head[^>]*>/gi, '')
-    .replace(/<\/head>/gi, '')
-    .replace(/<body[^>]*>/gi, '')
-    .replace(/<\/body>/gi, '')
-    // Eliminar también variantes con espacios o atributos raros
-    .replace(/<html\b[^>]*>/gi, '')
-    .replace(/<head\b[^>]*>/gi, '')
-    .replace(/<body\b[^>]*>/gi, '')
-    // Eliminar posibles etiquetas de cierre mal formadas
-    .replace(/<\/html\s*>/gi, '')
-    .replace(/<\/head\s*>/gi, '')
-    .replace(/<\/body\s*>/gi, '')
-    .trim();
-
-  // PASO 2: Si aún quedan, hacer una limpieza más profunda con regex
-  cleanedHtml = cleanedHtml.replace(/<\/?(html|head|body)(\s+[^>]*)?>/gi, '');
-  
-  // PASO 3: Extraer solo el contenido si hay etiquetas anidadas
-  const bodyMatch = cleanedHtml.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
-  if (bodyMatch && bodyMatch[1]) {
-    cleanedHtml = bodyMatch[1];
-  }
-  
-  // PASO 4: Eliminar cualquier etiqueta html/head/body que pueda haber quedado
-  cleanedHtml = cleanedHtml
-    .replace(/<\/?(html|head|body)[^>]*>/gi, '')
-    .trim();
-
-  // ========== ¡¡¡ CAMBIO CLAVE AQUÍ !!! ==========
-  // PASO 5: Cargar el HTML limpio CON xmlMode: true
-  // Esto evita que Cheerio añada <html>, <head>, <body> automáticamente.
-  const $fragment = cheerio.load(cleanedHtml, { 
-    decodeEntities: false,
-    xmlMode: true // <--- ESTA ES LA LÍNEA MÁGICA
-  });
-  
-  // Eliminar scripts de live-server si existen
-  $fragment('script').each((i, el) => {
-    const src = $fragment(el).attr('src');
-    if (src && src.includes('live-server')) {
-      $fragment(el).remove();
-    }
-  });
-  
-  const fragmentMarginNotes = [];
-  const fragmentSpecialElements = [];
-  
-  // Procesar notas y marginalia
-  processNotes($fragment, fragmentMarginNotes);
-  processRichContent($fragment, fragmentSpecialElements);
-  
-  // Asignar IDs a encabezados con prefijo
-  $fragment('h2, h3, h4').each((i, el) => {
-    const $el = $fragment(el);
-    const text = $el.text().trim();
-    if (!text) return;
-    if (!$el.attr('id')) {
-      const level = parseInt(el.tagName[1]);
-      const baseId = generateSlug(text) || `seccion-${level}-${Date.now()}-${i}`;
-      const id = prefix ? `${prefix}-${baseId}` : baseId;
-      $el.attr('id', id);
-    }
-  });
-  
-  // ========== Y AQUÍ AL OBTENER EL HTML ==========
-  return {
-    // Al hacer xmlMode: true, .html() YA NO AÑADIRÁ LA ESTRUCTURA COMPLETA.
-    processed: $fragment.html(),
-    marginNotes: fragmentMarginNotes,
-    specialElements: fragmentSpecialElements
-  };
-}
-  // ================================================================
-  // 1. PROCESAR HTML PRINCIPAL
-  // ================================================================
-  const mainResult = processHtmlFragment(article.html || '', 'main');
-  const mainHtml = mainResult.processed;
-  allMarginNotes.push(...mainResult.marginNotes);
-  allSpecialElements.push(...mainResult.specialElements);
-  
-  // ================================================================
-  // 2. PROCESAR APÉNDICE (si existe)
-  // ================================================================
-  let processedAppendix = '';
-  if (article.appendix) {
-    const appendixResult = processHtmlFragment(article.appendix, 'appendix');
-    processedAppendix = appendixResult.processed;
-    allMarginNotes.push(...appendixResult.marginNotes);
-    allSpecialElements.push(...appendixResult.specialElements);
-  }
-  
-  // ================================================================
-  // 3. PROCESAR REFERENCIAS (si existen)
-  // ================================================================
-  let processedReferences = '';
-  if (article.references) {
-    const referencesResult = processHtmlFragment(article.references, 'ref');
-    processedReferences = referencesResult.processed;
-    allMarginNotes.push(...referencesResult.marginNotes);
-    allSpecialElements.push(...referencesResult.specialElements);
-  }
-  
-  // ================================================================
-  // 4. PROCESAR NOTA EDITORIAL (si existe)
-  // ================================================================
-  let processedEditorialNote = '';
-  if (article['editorial-note']) {
-    const editorialResult = processHtmlFragment(article['editorial-note'], 'editorial');
-    processedEditorialNote = editorialResult.processed;
-    allMarginNotes.push(...editorialResult.marginNotes);
-    allSpecialElements.push(...editorialResult.specialElements);
-  }
-  
-  // ================================================================
-  // 5. GENERAR TOC CON TODAS LAS SECCIONES
-  // ================================================================
-  // Crear un documento combinado para generar el TOC completo
-  const combinedHtml = `
-    ${mainHtml}
-    ${processedAppendix ? '<div class="appendix-wrapper">' + processedAppendix + '</div>' : ''}
-    ${processedReferences ? '<div class="references-wrapper">' + processedReferences + '</div>' : ''}
-  `;
-  
-  const $combined = cheerio.load(combinedHtml, { decodeEntities: false });
-  
-  // Generar TOC
-  const tocHeadings = [];
-  $combined('h2, h3, h4').each((i, el) => {
-    const $el = $combined(el);
-    const level = parseInt(el.tagName[1]);
-    const text = $el.text().trim();
-    const id = $el.attr('id');
-    
-    if (text && id) {
-      tocHeadings.push({
-        level,
-        id,
-        text,
-        type: 'heading'
-      });
-    }
-  });
-  
-  // TOC completo con secciones especiales
-  const fullToc = [
-    ...(article.abstract ? [{
-      level: 2,
-      id: 'abstract',
-      text: 'Resumen',
-      type: 'heading'
-    }] : []),
-    ...(processedEditorialNote ? [{
-      level: 2,
-      id: 'editorial-note',
-      text: 'Nota de la edición',
-      type: 'heading'
-    }] : []),
-    ...tocHeadings,
-    ...(processedReferences ? [{
-      level: 2,
-      id: 'references',
-      text: 'Referencias',
-      type: 'heading'
-    }] : []),
-    ...(processedAppendix ? [{
-      level: 2,
-      id: 'appendix',
-      text: 'Apéndice',
-      type: 'heading'
-    }] : [])
-  ];
-  
-  // Añadir elementos especiales
-  allSpecialElements.forEach(el => {
-    fullToc.push({
-      level: 4,
-      id: el.id,
-      text: el.title,
-      type: el.type
-    });
-  });
-  
-  // ================================================================
-  // 6. PROCESAR AUTORES Y COLABORADORES
-  // ================================================================
-  const authorsDisplay = processAuthorsWithIcons(article.author);
-  const authorModals = generateAuthorModals(article.author);
-  const collaboratorsHtml = processCollaborators(article.colaboradores);
-  const citations = processCitations(article);
-  
-  // ================================================================
-  // 7. GENERAR HTML FINAL
-  // ================================================================
-  const htmlContent = generateHtmlTemplate({
-    article,
-    articleSlug,
-    authorsDisplay,
-    authorModals,
-    collaboratorsHtml,
-    toc: fullToc,
-    marginNotes: allMarginNotes,
-    processedHtml: mainHtml,
-    referencesHtml: processedReferences,
-    appendixHtml: processedAppendix,
-    editorialNoteHtml: processedEditorialNote,
-    specialElements: allSpecialElements,
-    citations
-  });
-
-  fs.writeFileSync(outputFile, htmlContent, 'utf8');
-  console.log(`✅ Generado: ${outputFile}`);
-}
-function generateHtmlTemplate({
-  article,
-  articleSlug,
-  authorsDisplay,
-  authorModals,
-  collaboratorsHtml,
-  toc,
-  marginNotes,
-  processedHtml,        // HTML principal procesado
-  referencesHtml,        // Referencias procesadas
-  appendixHtml,          // Apéndice procesado
-  editorialNoteHtml,     // Nota editorial procesada
-  specialElements,
-  citations
-}) {
-  const hasSpanishTitle = article['name-translated'] && article['name-translated'].trim() !== '';
-  const hasOriginalTitle = article['name-original'] && article['name-original'].trim() !== '';
-
-  // Título principal (traducido)
-  const title = hasSpanishTitle ? article['name-translated'] : article['name-original'];
-  
-  // Título original (para mostrar como subtítulo)
-  const originalTitle = hasOriginalTitle && hasSpanishTitle ? article['name-original'] : '';
-  
-  // Generar TOC HTML
-  const tocHtml = toc.map(item => {
-    const indent = '&nbsp;'.repeat((item.level - 2) * 4);
-    
-let icon = '';
-if (item.type === 'figure') {
-  icon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="display: inline-block; margin-right: 4px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/><path d="M21 15L16 10 5 21"/></svg> `;
-} else if (item.type === 'table') {
-  icon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="display: inline-block; margin-right: 4px;"><path d="M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5zm0 5h18M10 3v18"/></svg> `;
-} else if (item.type === 'code') {
-  icon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="display: inline-block; margin-right: 4px;"><path d="m18 16 4-4-4-4M6 8l-4 4 4 4M14.5 4l-5 16"/></svg> `;
-} else if (item.type === 'equation') {
-  icon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="display: inline-block; margin-right: 4px;"><path d="M4 7h3a2 2 0 0 1 2 2v6a2 2 0 0 0 2 2h3"/><path d="M7 11h4"/><path d="M17 7h.01"/><circle cx="18.5" cy="15.5" r="2.5"/></svg> `;
-}
-    
-    return `
-    <li class="toc-item toc-level-${item.level} ${item.type !== 'heading' ? 'toc-special' : ''}">
-      <a href="#${item.id}">${indent}${icon}${item.text}</a>
-    </li>
-    `;
-  }).join('');
-
-  return `<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="citation_title" content="${title.replace(/"/g, '&quot;')}">
-  <meta name="citation_publication_date" content="${article['original-date'] || ''}">
+  <meta name="citation_title" content="Elementos de matemáticas y filosofía natural">
+  <meta name="citation_publication_date" content="01-01-1748">
   <meta name="citation_journal_title" content="Revista Nacional de las Ciencias para Estudiantes - Clásicos de la Ciencia">
   <meta name="citation_issn" content="3087-2839">
-  <meta name="citation_pdf_url" content="${article['pdf-url'] || ''}">
-  <meta name="citation_abstract" content="${(article.abstract || '').replace(/"/g, '&quot;').substring(0, 500)}">
-  <meta name="citation_keywords" content="${(article.keywords || []).join('; ')}">
+  <meta name="citation_pdf_url" content="https://www.revistacienciasestudiantes.com/pdfs/classic-science/CC-2025-0520.pdf">
+  <meta name="citation_abstract" content="Este manuscrito inédito, recientemente atribuido a Leonhard Euler, recoge los fundamentos de su pensamiento matemático y físico. Escrito originalmente en latín durante su estancia en Berlín, 'Elementa matheseos et philosophiae naturalis' ofrece una visión unificada de las matemáticas como lenguaje de la naturaleza. La presente edición crítica incluye notas que exploran la evolución de la notación matemática, las influencias de Euler en la ciencia posterior y la relación entre sus ideas y los des">
+  <meta name="citation_keywords" content="Euler; matemáticas; filosofía natural; cálculo; notación matemática; historia de la ciencia; análisis matemático; física matemática">
   <meta name="citation_language" content="es">
-  <meta name="description" content="${(article.abstract || '').replace(/"/g, '&quot;').substring(0, 160)}...">
-  <meta name="keywords" content="${(article.keywords || []).join(', ')}">
-  <title>${title} - Clásicos de la Ciencia</title>
+  <meta name="description" content="Este manuscrito inédito, recientemente atribuido a Leonhard Euler, recoge los fundamentos de su pensamiento matemático y físico. Escrito originalmente en latín ...">
+  <meta name="keywords" content="Euler, matemáticas, filosofía natural, cálculo, notación matemática, historia de la ciencia, análisis matemático, física matemática">
+  <title>Elementos de matemáticas y filosofía natural - Clásicos de la Ciencia</title>
   
   <!-- Fuentes: IM Fell para estilo clásico, Inter para modernidad, JetBrains Mono para código -->
   <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=IM+Fell+French+Canon:ital@0;1&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
@@ -3782,9 +2563,9 @@ blockquote cite {
     <div class="sd-header-top">
       <div class="sd-brand-container">
         <a href="/" class="sd-journal-logo">
-          <img src="${LOGO_ES}" alt="Logo RNCE" class="sd-logo-img">
+          <img src="https://www.revistacienciasestudiantes.com/assets/logo.png" alt="Logo RNCE" class="sd-logo-img">
           <div class="sd-journal-titles">
-            <span class="sd-journal-name">${JOURNAL_NAME_ES}</span>
+            <span class="sd-journal-name">Revista Nacional de las Ciencias para Estudiantes</span>
             <span class="sd-issn">ISSN: 3087-2839</span>
           </div>
         </a>
@@ -3850,18 +2631,40 @@ blockquote cite {
     <div class="sd-mobile-nav-section">
       <div class="sd-mobile-nav-section-title">NOTAS MARGINALES</div>
       <ul class="sd-mobile-nav-items" id="mobile-notes-list">
-        ${marginNotes.map(note => `
+        
         <li class="sd-mobile-nav-item">
-          <a href="#${note.id}" class="sd-mobile-nav-link" onclick="event.preventDefault(); highlightAndScrollToMargin('${note.id}', ${note.number}); closeMobileMenu();">
+          <a href="#margin-1" class="sd-mobile-nav-link" onclick="event.preventDefault(); highlightAndScrollToMargin('margin-1', 1); closeMobileMenu();">
             <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor">
               <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5" fill="none"/>
               <path d="M8 4v5M8 11v1" stroke="currentColor" stroke-width="1.5"/>
             </svg>
-            <span>Nota ${note.number}</span>
-            <span class="sd-mobile-nav-badge">${note.text.substring(0, 30)}${note.text.length > 30 ? '...' : ''}</span>
+            <span>Nota 1</span>
+            <span class="sd-mobile-nav-badge">Euler introduce aquí, de forma...</span>
           </a>
         </li>
-        `).join('')}
+        
+        <li class="sd-mobile-nav-item">
+          <a href="#margin-2" class="sd-mobile-nav-link" onclick="event.preventDefault(); highlightAndScrollToMargin('margin-2', 2); closeMobileMenu();">
+            <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor">
+              <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5" fill="none"/>
+              <path d="M8 4v5M8 11v1" stroke="currentColor" stroke-width="1.5"/>
+            </svg>
+            <span>Nota 2</span>
+            <span class="sd-mobile-nav-badge">La serie de Taylor ya era cono...</span>
+          </a>
+        </li>
+        
+        <li class="sd-mobile-nav-item">
+          <a href="#margin-3" class="sd-mobile-nav-link" onclick="event.preventDefault(); highlightAndScrollToMargin('margin-3', 3); closeMobileMenu();">
+            <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor">
+              <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5" fill="none"/>
+              <path d="M8 4v5M8 11v1" stroke="currentColor" stroke-width="1.5"/>
+            </svg>
+            <span>Nota 3</span>
+            <span class="sd-mobile-nav-badge">Un ejemplo de cómo las ideas d...</span>
+          </a>
+        </li>
+        
       </ul>
     </div>
     
@@ -3869,7 +2672,7 @@ blockquote cite {
     <div class="sd-mobile-menu-footer">
       <div>ISSN: 3087-2839</div>
       <div style="margin-top: 0.5rem; font-size: 0.7rem;">
-        &copy; ${new Date().getFullYear()} RNCE
+        &copy; 2026 RNCE
       </div>
     </div>
   </div>
@@ -3879,7 +2682,79 @@ blockquote cite {
     <nav class="toc-sidebar">
       <div class="toc-title">CONTENIDO</div>
       <ul class="toc-list" id="toc-list">
-        ${tocHtml}
+        
+    <li class="toc-item toc-level-2 ">
+      <a href="#abstract">Resumen</a>
+    </li>
+    
+    <li class="toc-item toc-level-2 ">
+      <a href="#editorial-note">Nota de la edición</a>
+    </li>
+    
+    <li class="toc-item toc-level-2 ">
+      <a href="#main-capitulo-i-de-las-cantidades-y-sus-fluxiones">Capítulo I: De las cantidades y sus fluxiones</a>
+    </li>
+    
+    <li class="toc-item toc-level-3 ">
+      <a href="#main-sobre-el-analisis-de-los-infinitos">&nbsp;&nbsp;&nbsp;&nbsp;Sobre el análisis de los infinitos</a>
+    </li>
+    
+    <li class="toc-item toc-level-3 ">
+      <a href="#main-de-las-series-infinitas">&nbsp;&nbsp;&nbsp;&nbsp;De las series infinitas</a>
+    </li>
+    
+    <li class="toc-item toc-level-2 ">
+      <a href="#main-capitulo-ii-sobre-el-uso-del-analisis-en-la-filosofia-natural">Capítulo II: Sobre el uso del análisis en la filosofía natural</a>
+    </li>
+    
+    <li class="toc-item toc-level-3 ">
+      <a href="#main-la-mecanica-como-geometria-del-movimiento">&nbsp;&nbsp;&nbsp;&nbsp;La mecánica como geometría del movimiento</a>
+    </li>
+    
+    <li class="toc-item toc-level-3 ">
+      <a href="#main-tabla-de-funciones-elementales-y-sus-fluxiones">&nbsp;&nbsp;&nbsp;&nbsp;Tabla de funciones elementales y sus fluxiones</a>
+    </li>
+    
+    <li class="toc-item toc-level-2 ">
+      <a href="#main-conclusion">Conclusión</a>
+    </li>
+    
+    <li class="toc-item toc-level-3 ">
+      <a href="#appendix-apendice-a-cronologia-de-las-obras-principales-de-euler">&nbsp;&nbsp;&nbsp;&nbsp;Apéndice A: Cronología de las obras principales de Euler</a>
+    </li>
+    
+    <li class="toc-item toc-level-3 ">
+      <a href="#appendix-apendice-b-correspondencia-con-christian-goldbach-extracto">&nbsp;&nbsp;&nbsp;&nbsp;Apéndice B: Correspondencia con Christian Goldbach (extracto)</a>
+    </li>
+    
+    <li class="toc-item toc-level-3 ">
+      <a href="#ref-bibliografia">&nbsp;&nbsp;&nbsp;&nbsp;Bibliografía</a>
+    </li>
+    
+    <li class="toc-item toc-level-2 ">
+      <a href="#references">Referencias</a>
+    </li>
+    
+    <li class="toc-item toc-level-2 ">
+      <a href="#appendix">Apéndice</a>
+    </li>
+    
+    <li class="toc-item toc-level-4 toc-special">
+      <a href="#code-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="display: inline-block; margin-right: 4px;"><path d="m18 16 4-4-4-4M6 8l-4 4 4 4M14.5 4l-5 16"/></svg> Código (python)</a>
+    </li>
+    
+    <li class="toc-item toc-level-4 toc-special">
+      <a href="#table-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="display: inline-block; margin-right: 4px;"><path d="M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5zm0 5h18M10 3v18"/></svg> Tabla 1</a>
+    </li>
+    
+    <li class="toc-item toc-level-4 toc-special">
+      <a href="#figure-1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="display: inline-block; margin-right: 4px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/><path d="M21 15L16 10 5 21"/></svg> Formación rocosa abstracta, un reflejo de la geometría natural.</a>
+    </li>
+    
+    <li class="toc-item toc-level-4 toc-special">
+      <a href="#table-2">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="display: inline-block; margin-right: 4px;"><path d="M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5zm0 5h18M10 3v18"/></svg> Tabla 2</a>
+    </li>
+    
       </ul>
     </nav>
 
@@ -3889,21 +2764,21 @@ blockquote cite {
         <!-- TÍTULO SEMINAL -->
         <div class="seminal-title-container">
           <span class="collection-tag">Clásicos de la Ciencia</span>
-          <h1 class="main-classic-title">${title}</h1>
-          ${originalTitle ? `<div class="original-title">${originalTitle}</div>` : ''}
+          <h1 class="main-classic-title">Elementos de matemáticas y filosofía natural</h1>
+          <div class="original-title">Elementa matheseos et philosophiae naturalis</div>
           <div class="title-separator"></div>
           
           <!-- METADATA DE ARCHIVO -->
           <div class="archive-metadata">
-            ${article['original-date'] ? `
+            
             <div class="meta-column">
               <span class="meta-label">Publicado originalmente</span>
-              <span class="meta-value">${article['original-date']}</span>
+              <span class="meta-value">01-01-1748</span>
             </div>
-            ` : ''}
+            
             <div class="meta-column">
               <span class="meta-label">Identificador</span>
-              <span class="meta-value">${article.id || 'CC-0000-0000'}</span>
+              <span class="meta-value">CC-2025-0520</span>
             </div>
             <div class="meta-column">
               <span class="meta-label">Idioma</span>
@@ -3915,36 +2790,36 @@ blockquote cite {
         <!-- AUTORES -->
         <div class="authors-section">
           <div class="authors">
-            ${authorsDisplay}
+            <a href="https://es.wikipedia.org/wiki/Leonhard_Euler" target="_blank" rel="noopener" class="author-link">Leonhard Euler</a><span class="author-info-icon" onclick="openAuthorModal('leonhard-euler')" title="Información del autor">ⓘ</span>
           </div>
         </div>
 
         <!-- EDITORES (si existen) -->
-        ${article.editor && article.editor.length > 0 ? `
+        
         <div class="collaborators-section">
           <h4 style="font-family:'Inter',sans-serif; font-size:0.8rem; text-transform:uppercase;">Edición a cargo de</h4>
-          ${article.editor.map(ed => `
+          
             <div class="collaborator-item">
-              <span class="collaborator-name">${ed.website ? `<a href="${ed.website}" target="_blank">${ed.name}</a>` : ed.name}</span>
-              ${ed.orcid ? `<a href="https://orcid.org/${ed.orcid}" target="_blank" class="author-icon">${orcidSvg}</a>` : ''}
-              ${ed.email ? `<a href="mailto:${ed.email}" class="author-icon">${emailSvg}</a>` : ''}
+              <span class="collaborator-name"><a href="https://www.csic.es/elenamartinez" target="_blank">Elena Martínez Ruiz</a></span>
+              <a href="https://orcid.org/0000-0001-9876-5432" target="_blank" class="author-icon"><svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" width="16" height="16"> <circle cx="128" cy="128" r="120" fill="#A6CE39"/> <g fill="#FFFFFF"> <rect x="71" y="78" width="17" height="102"/> <circle cx="79.5" cy="56" r="11"/> <path d="M103 78 v102 h41.5 c28.2 0 51-22.8 51-51 s-22.8-51-51-51 H103 zm17 17 h24.5 c18.8 0 34 15.2 34 34 s-15.2 34-34 34 H120 V95 z" fill-rule="evenodd"/> </g> </svg></a>
+              <a href="mailto:e.martinez@csic.es" class="author-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg></a>
             </div>
-          `).join('')}
+          
         </div>
-        ` : ''}
+        
 
         <!-- COLABORADORES -->
-        ${collaboratorsHtml ? `
+        
         <div class="collaborators-section">
           <h4 style="font-family:'Inter',sans-serif; font-size:0.8rem; text-transform:uppercase;">Colaboradores</h4>
-          ${collaboratorsHtml}
+          <div class="collaborator-item"><span class="collaborator-name"><a href="https://www.uni-heidelberg.de/schmidt" target="_blank" rel="noopener">Thomas Schmidt</a></span><span class="collaborator-role">Asesor histórico y traductor del latín</span><span class="author-icons"><a href="https://orcid.org/0000-0002-1111-2222" target="_blank" class="author-icon" title="ORCID"><svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" width="16" height="16"> <circle cx="128" cy="128" r="120" fill="#A6CE39"/> <g fill="#FFFFFF"> <rect x="71" y="78" width="17" height="102"/> <circle cx="79.5" cy="56" r="11"/> <path d="M103 78 v102 h41.5 c28.2 0 51-22.8 51-51 s-22.8-51-51-51 H103 zm17 17 h24.5 c18.8 0 34 15.2 34 34 s-15.2 34-34 34 H120 V95 z" fill-rule="evenodd"/> </g> </svg></a><a href="mailto:schmidt@uni-heidelberg.de" class="author-icon" title="Email"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg></a></span></div><div class="collaborator-item"><span class="collaborator-name"><a href="https://www.ub.edu/romero" target="_blank" rel="noopener">Laura S. Romero</a></span><span class="collaborator-role">Edición de contenido matemático y revisión de notación</span><span class="author-icons"><a href="https://orcid.org/0000-0003-3333-4444" target="_blank" class="author-icon" title="ORCID"><svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" width="16" height="16"> <circle cx="128" cy="128" r="120" fill="#A6CE39"/> <g fill="#FFFFFF"> <rect x="71" y="78" width="17" height="102"/> <circle cx="79.5" cy="56" r="11"/> <path d="M103 78 v102 h41.5 c28.2 0 51-22.8 51-51 s-22.8-51-51-51 H103 zm17 17 h24.5 c18.8 0 34 15.2 34 34 s-15.2 34-34 34 H120 V95 z" fill-rule="evenodd"/> </g> </svg></a><a href="mailto:laura.romero@ub.edu" class="author-icon" title="Email"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg></a></span></div>
         </div>
-        ` : ''}
+        
 
         <!-- BARRA DE ACCIONES -->
-        ${article['pdf-url'] ? `
+        
         <div class="action-bar">
-          <a href="${article['pdf-url']}" target="_blank" rel="noopener" class="btn-pdf">
+          <a href="https://www.revistacienciasestudiantes.com/pdfs/classic-science/CC-2025-0520.pdf" target="_blank" rel="noopener" class="btn-pdf">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/>
               <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>
@@ -3952,55 +2827,341 @@ blockquote cite {
             Descargar PDF
           </a>
           <span class="oa-label">
-            ${oaSvg}
+            <svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 500 260" style="vertical-align: middle;"><g transform="matrix(1.25 0 0 -1.25 0 360)"><path d="M262.883 200.896v-8.846h25.938v8.846c0 21.412 17.421 38.831 38.831 38.831 21.409 0 38.829-17.419 38.829-38.831v-63.985h25.939v63.985c0 35.713-29.056 64.769-64.768 64.769-35.711 0-64.769-29.056-64.769-64.769M349.153 99.568c0-11.816-9.58-21.396-21.399-21.396-11.818 0-21.398 9.58-21.398 21.396 0 11.823 9.58 21.404 21.398 21.404 11.819 0 21.399-9.581 21.399-21.404" fill="#f68212"/><path d="M277.068 99.799c0 27.811 22.627 50.436 50.438 50.436 27.809 0 50.433-22.625 50.433-50.436 0-27.809-22.624-50.438-50.433-50.438-27.811.001-50.438 22.63-50.438 50.438m-25.938 0c0-42.109 34.265-76.373 76.375-76.373 42.111 0 76.373 34.265 76.373 76.373 0 42.113-34.262 76.375-76.373 76.375-42.11 0-76.375-34.262-76.375-76.375" fill="#f68212"/></g></svg>
             Open Access
           </span>
         </div>
-        ` : ''}
+        
 
         <!-- ABSTRACT -->
-        ${article.abstract ? `
+        
         <section class="abstract-section" id="abstract">
           <h2>Resumen</h2>
           <div class="abstract-text">
-            ${article.abstract}
+            Este manuscrito inédito, recientemente atribuido a Leonhard Euler, recoge los fundamentos de su pensamiento matemático y físico. Escrito originalmente en latín durante su estancia en Berlín, 'Elementa matheseos et philosophiae naturalis' ofrece una visión unificada de las matemáticas como lenguaje de la naturaleza. La presente edición crítica incluye notas que exploran la evolución de la notación matemática, las influencias de Euler en la ciencia posterior y la relación entre sus ideas y los desarrollos contemporáneos en inteligencia artificial y computación científica.
           </div>
-          ${article.keywords && article.keywords.length > 0 ? `
+          
           <div class="keywords">
-            ${article.keywords.map(kw => `<span class="keyword-tag">${kw}</span>`).join('')}
+            <span class="keyword-tag">Euler</span><span class="keyword-tag">matemáticas</span><span class="keyword-tag">filosofía natural</span><span class="keyword-tag">cálculo</span><span class="keyword-tag">notación matemática</span><span class="keyword-tag">historia de la ciencia</span><span class="keyword-tag">análisis matemático</span><span class="keyword-tag">física matemática</span>
           </div>
-          ` : ''}
+          
         </section>
-        ` : ''}
+        
 
         <!-- NOTA EDITORIAL -->
-        ${article['editorial-note'] ? `
+        
         <div class="editorial-note" id="editorial-note">
           <h3>Nota de la edición</h3>
-          ${article['editorial-note']}
+          <p>La presente edición crítica se ha preparado a partir del manuscrito original <em>Cod. Ms. Euler 42</em> conservado en la Biblioteca de la Universidad de Basilea. Se ha respetado la ortografía y notación original de Euler, aunque se han añadido notas explicativas (marcadas con el símbolo ⦿) para aclarar términos y conceptos al lector moderno. Las referencias cruzadas a otras obras de Euler y de sus contemporáneos se han actualizado siguiendo la numeración de la <em>Opera Omnia</em>.</p>
+
+<p>Queremos expresar nuestro agradecimiento al Prof. Thomas Schmidt por su inestimable ayuda con la transcripción del latín y la identificación de fuentes, y a la Dra. Laura S. Romero por la revisión matemática y la preparación de los ejemplos en código Python que ilustran la vigencia de los métodos eulerianos.</p>
+
+<p>Elena Martínez Ruiz<br>Editora principal<br>CSIC, Madrid, mayo de 2025</p>
         </div>
-        ` : ''}
+        
 
         <!-- CONTENIDO DEL ARTÍCULO -->
         <section class="article-content" id="full-text">
-          ${processedHtml || '<p>El texto completo estará disponible próximamente.</p>'}
+          <h2 id="main-capitulo-i-de-las-cantidades-y-sus-fluxiones">Capítulo I: De las cantidades y sus fluxiones</h2>
+
+<h3 id="main-sobre-el-analisis-de-los-infinitos">Sobre el análisis de los infinitos</h3>
+
+<p>§1. Llamamos cantidades variables a aquellas que no tienen un valor fijo, sino que pueden aumentar o disminuir continuamente. A su incremento o decremento momentáneo, si se concibe como generado por un movimiento continuo, lo denominamos <em>fluxión</em><span class="footnote-ref"><a href="#footnote-1" id="footnote-ref-1">[1]</a></span>. Las cantidades mismas, que fluyen, las llamamos <em>fluentes</em>.</p>
+
+<p>§2. Si la cantidad <em>x</em> fluye uniformemente, su fluxión, que denotaremos como \( \dot{x} \), será constante. Pero si el flujo no es uniforme, la fluxión misma fluirá, y su tasa de cambio será la segunda fluxión, \( \ddot{x} \), y así sucesivamente. De esta manera, el análisis de los infinitos
+      <span id="margin-1" class="margin-note-indicator-wrapper">
+        <a href="#" class="margin-note-link" onclick="event.preventDefault(); openMarginNote('margin-1', 1);" title="Ver nota marginal">
+          <span class="margin-note-badge">[Nota 1]</span>
+        </a>
+      </span>
+     nos proporciona las herramientas para estudiar estas relaciones.</p>
+
+<p>§3. Consideremos la función \( y = x^2 \). Cuando <em>x</em> se convierte en \( x + \dot{x} \), entonces <em>y</em> se convierte en:</p>
+
+\[ (x + \dot{x})^2 = x^2 + 2x\dot{x} + (\dot{x})^2 \]
+
+<p>El incremento de <em>y</em> es, por tanto, \( 2x\dot{x} + (\dot{x})^2 \). Ahora bien, el término \( (\dot{x})^2 \) es infinitamente pequeño comparado con \( 2x\dot{x} \), y por lo tanto puede ser despreciado. De aquí deducimos que la fluxión de \( x^2 \) es \( 2x\dot{x} \), o en notación más moderna, si \( \dot{x}=1 \), entonces la derivada de \( x^2 \) es \( 2x \)<span class="footnote-ref"><a href="#footnote-2" id="footnote-ref-2">[2]</a></span>.</p>
+
+<h3 id="main-de-las-series-infinitas">De las series infinitas</h3>
+
+<p>§4. Toda función puede ser expresada como una serie infinita de potencias de la variable. Este es uno de los principios más fecundos del análisis. Por ejemplo, la función exponencial \( e^x \) puede desarrollarse como:</p>
+
+\[ e^x = 1 + x + \frac{x^2}{2} + \frac{x^3}{6} + \frac{x^4}{24} + \cdots \]
+
+<p>Esta serie converge para cualquier valor de <em>x</em> y nos permite calcular la función con la precisión que se desee.
+      <span id="margin-2" class="margin-note-indicator-wrapper">
+        <a href="#" class="margin-note-link" onclick="event.preventDefault(); openMarginNote('margin-2', 2);" title="Ver nota marginal">
+          <span class="margin-note-badge">[Nota 2]</span>
+        </a>
+      </span>
+    </p>
+
+<blockquote>"Nada ocurre en el mundo cuyo significado no sea el de alguna función máxima o mínima." - Leonhard Euler</blockquote>
+
+<h2 id="main-capitulo-ii-sobre-el-uso-del-analisis-en-la-filosofia-natural">Capítulo II: Sobre el uso del análisis en la filosofía natural</h2>
+
+<h3 id="main-la-mecanica-como-geometria-del-movimiento">La mecánica como geometría del movimiento</h3>
+
+<p>§5. Dado que la naturaleza se expresa en el lenguaje de las matemáticas, los fenómenos del movimiento deben poder describirse mediante ecuaciones. Para un cuerpo en caída libre cerca de la superficie de la Tierra, la aceleración \( a \) es constante. Si denotamos la velocidad como \( v \), y el espacio recorrido como \( s \), tenemos las siguientes relaciones fluxionarias:</p>
+
+\[ \dot{v} = a, \quad \dot{s} = v \]
+
+<p>De donde se sigue que \( v = at \) (siendo <em>t</em> el tiempo) y \( s = \frac{1}{2}at^2 \), asumiendo que el cuerpo parte del reposo.</p>
+
+<p>§6. Para ilustrar este punto con un cálculo moderno, podemos simular este movimiento con un pequeño programa:
+      <span id="margin-3" class="margin-note-indicator-wrapper">
+        <a href="#" class="margin-note-link" onclick="event.preventDefault(); openMarginNote('margin-3', 3);" title="Ver nota marginal">
+          <span class="margin-note-badge">[Nota 3]</span>
+        </a>
+      </span>
+    </p>
+
+
+      <div class="code-block-wrapper" id="code-1">
+        <div class="code-header">
+          <span class="code-language">python</span>
+          <button class="code-copy-btn" onclick="copyCode('code-1', this)" title="Copiar código">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            <span class="copy-text">Copiar</span>
+          </button>
+        </div>
+        <div class="code-block-container">
+          <div class="code-line-numbers" aria-hidden="true">
+            <span class="code-line-number">1</span><span class="code-line-number">2</span><span class="code-line-number">3</span><span class="code-line-number">4</span><span class="code-line-number">5</span><span class="code-line-number">6</span><span class="code-line-number">7</span><span class="code-line-number">8</span><span class="code-line-number">9</span>
+          </div>
+          <pre class="code-block language-python"><code class="language-python"># Simulación del movimiento uniformemente acelerado
+t = 0  # tiempo inicial
+s = 0  # posición inicial
+v = 0  # velocidad inicial
+a = 9.8  # aceleración (gravedad, m/s^2)
+dt = 0.1  # paso de tiempo
+
+# Simulación para 10 segundos
+while t </code></pre>
+        </div>
+      </div>
+    
+
+<h3 id="main-tabla-de-funciones-elementales-y-sus-fluxiones">Tabla de funciones elementales y sus fluxiones</h3>
+
+<p>A continuación, presentamos una tabla con algunas funciones comunes y sus fluxiones (derivadas), que son de utilidad para el físico:</p>
+
+
+  <div class="table-download-wrapper" id="table-1-wrapper">
+    <div class="table-header">
+      <span class="table-label">Tabla 1</span>
+      <div class="table-download-buttons">
+        <a href="data:text/csv;charset=utf-8,%EF%BB%BF%22Funci%C3%B3n%20y%22%2C%22Fluxi%C3%B3n%20dy%2Fdx%22%0A%22x%20%5B1%5D%20n%20%E2%86%A9%22%2C%22n%20x%20%5B2%5D%20n-1%20%E2%86%A9%22%0A%22sin(x)%22%2C%22cos(x)%22%0A%22cos(x)%22%2C%22-sin(x)%22%0A%22e%20%5B3%5D%20x%20%E2%86%A9%22%2C%22e%20%5B4%5D%20x%20%E2%86%A9%22%0A%22ln(x)%22%2C%221%2Fx%22" download="tabla-1.csv" class="table-download-btn" title="Descargar como CSV">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12h6"/><path d="M9 16h6"/><path d="M9 8h3"/><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+          <span>CSV</span>
+        </a>
+        <a href="data:application/vnd.ms-excel;charset=utf-8,%EF%BB%BF%3Ctable%3E%3Cthead%3E%3Ctr%3E%3Cth%3EFunci%C3%B3n%20y%3C%2Fth%3E%3Cth%3EFluxi%C3%B3n%20dy%2Fdx%3C%2Fth%3E%3C%2Ftr%3E%3C%2Fthead%3E%3Ctbody%3E%3Ctr%3E%3Ctd%3Ex%20%5B1%5D%20n%20%E2%86%A9%3C%2Ftd%3E%3Ctd%3En%20x%20%5B2%5D%20n-1%20%E2%86%A9%3C%2Ftd%3E%3C%2Ftr%3E%3Ctr%3E%3Ctd%3Esin(x)%3C%2Ftd%3E%3Ctd%3Ecos(x)%3C%2Ftd%3E%3C%2Ftr%3E%3Ctr%3E%3Ctd%3Ecos(x)%3C%2Ftd%3E%3Ctd%3E-sin(x)%3C%2Ftd%3E%3C%2Ftr%3E%3Ctr%3E%3Ctd%3Ee%20%5B3%5D%20x%20%E2%86%A9%3C%2Ftd%3E%3Ctd%3Ee%20%5B4%5D%20x%20%E2%86%A9%3C%2Ftd%3E%3C%2Ftr%3E%3Ctr%3E%3Ctd%3Eln(x)%3C%2Ftd%3E%3Ctd%3E1%2Fx%3C%2Ftd%3E%3C%2Ftr%3E%3C%2Ftbody%3E%3C%2Ftable%3E" download="tabla-1.xls" class="table-download-btn" title="Descargar como Excel">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
+          <span>Excel</span>
+        </a>
+        <a href="data:application/json;charset=utf-8,%7B%0A%20%20%22number%22%3A%201%2C%0A%20%20%22caption%22%3A%20null%2C%0A%20%20%22headers%22%3A%20%5B%0A%20%20%20%20%22Funci%C3%B3n%20y%22%2C%0A%20%20%20%20%22Fluxi%C3%B3n%20dy%2Fdx%22%0A%20%20%5D%2C%0A%20%20%22rows%22%3A%20%5B%0A%20%20%20%20%5B%0A%20%20%20%20%20%20%22x%20%5B1%5D%20n%20%E2%86%A9%22%2C%0A%20%20%20%20%20%20%22n%20x%20%5B2%5D%20n-1%20%E2%86%A9%22%0A%20%20%20%20%5D%2C%0A%20%20%20%20%5B%0A%20%20%20%20%20%20%22sin(x)%22%2C%0A%20%20%20%20%20%20%22cos(x)%22%0A%20%20%20%20%5D%2C%0A%20%20%20%20%5B%0A%20%20%20%20%20%20%22cos(x)%22%2C%0A%20%20%20%20%20%20%22-sin(x)%22%0A%20%20%20%20%5D%2C%0A%20%20%20%20%5B%0A%20%20%20%20%20%20%22e%20%5B3%5D%20x%20%E2%86%A9%22%2C%0A%20%20%20%20%20%20%22e%20%5B4%5D%20x%20%E2%86%A9%22%0A%20%20%20%20%5D%2C%0A%20%20%20%20%5B%0A%20%20%20%20%20%20%22ln(x)%22%2C%0A%20%20%20%20%20%20%221%2Fx%22%0A%20%20%20%20%5D%0A%20%20%5D%2C%0A%20%20%22data%22%3A%20%5B%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22funcin_y%22%3A%20%22x%20%5B1%5D%20n%20%E2%86%A9%22%2C%0A%20%20%20%20%20%20%22fluxin_dydx%22%3A%20%22n%20x%20%5B2%5D%20n-1%20%E2%86%A9%22%0A%20%20%20%20%7D%2C%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22funcin_y%22%3A%20%22sin(x)%22%2C%0A%20%20%20%20%20%20%22fluxin_dydx%22%3A%20%22cos(x)%22%0A%20%20%20%20%7D%2C%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22funcin_y%22%3A%20%22cos(x)%22%2C%0A%20%20%20%20%20%20%22fluxin_dydx%22%3A%20%22-sin(x)%22%0A%20%20%20%20%7D%2C%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22funcin_y%22%3A%20%22e%20%5B3%5D%20x%20%E2%86%A9%22%2C%0A%20%20%20%20%20%20%22fluxin_dydx%22%3A%20%22e%20%5B4%5D%20x%20%E2%86%A9%22%0A%20%20%20%20%7D%2C%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22funcin_y%22%3A%20%22ln(x)%22%2C%0A%20%20%20%20%20%20%22fluxin_dydx%22%3A%20%221%2Fx%22%0A%20%20%20%20%7D%0A%20%20%5D%0A%7D" download="tabla-1.json" class="table-download-btn" title="Descargar como JSON">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 20c-1.5 0-2.5-1-2.5-2.5v-3.5c0-1-1-1.5-2-1.5s-2-.5-2-1.5v-1c0-1 1-1.5 2-1.5s2-.5 2-1.5v-3.5c0-1.5 1-2.5 2.5-2.5"/><path d="M14 4c1.5 0 2.5 1 2.5 2.5v3.5c0 1 1 1.5 2 1.5s2 .5 2 1.5v1c0 1-1 1.5-2 1.5s-2 .5-2 1.5v3.5c0 1.5-1 2.5-2.5 2.5"/></svg>
+          <span>JSON</span>
+        </a>
+        <a href="data:text/plain;charset=utf-8,%5Cbegin%7Btable%7D%5Bh%5D%0A%5Ccentering%0A%5Clabel%7Btab%3A1%7D%0A%5Cbegin%7Btabular%7D%7B%7Cl%7Cl%7C%7D%0A%5Chline%0AFunci%C3%B3n%20y%20%26%20Fluxi%C3%B3n%20dy%2Fdx%20%5C%5C%0A%5Chline%0Ax%20%5B1%5D%20n%20%E2%86%A9%20%26%20n%20x%20%5B2%5D%20n-1%20%E2%86%A9%20%5C%5C%0A%5Chline%0Asin(x)%20%26%20cos(x)%20%5C%5C%0A%5Chline%0Acos(x)%20%26%20-sin(x)%20%5C%5C%0A%5Chline%0Ae%20%5B3%5D%20x%20%E2%86%A9%20%26%20e%20%5B4%5D%20x%20%E2%86%A9%20%5C%5C%0A%5Chline%0Aln(x)%20%26%201%2Fx%20%5C%5C%0A%5Chline%0A%5Cend%7Btabular%7D%0A%5Cend%7Btable%7D" download="tabla-1.tex" class="table-download-btn" title="Descargar como LaTeX">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 4h-12l7 8-7 8h12"/></svg>
+          <span>LaTeX</span>
+        </a>
+        <a href="data:application/xml;charset=utf-8,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%0A%3Ctable%20id%3D%22table-1%22%20number%3D%221%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2Fxhtml%22%3E%0A%20%20%3Cthead%3E%0A%20%20%20%20%3Ctr%3E%0A%20%20%20%20%20%20%3Cth%3EFunci%C3%B3n%20y%3C%2Fth%3E%0A%20%20%20%20%20%20%3Cth%3EFluxi%C3%B3n%20dy%2Fdx%3C%2Fth%3E%0A%20%20%20%20%3C%2Ftr%3E%0A%20%20%3C%2Fthead%3E%0A%20%20%3Ctbody%3E%0A%20%20%20%20%3Ctr%3E%0A%20%20%20%20%20%20%3Ctd%3Ex%20%5B1%5D%20n%20%E2%86%A9%3C%2Ftd%3E%0A%20%20%20%20%20%20%3Ctd%3En%20x%20%5B2%5D%20n-1%20%E2%86%A9%3C%2Ftd%3E%0A%20%20%20%20%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%0A%20%20%20%20%20%20%3Ctd%3Esin(x)%3C%2Ftd%3E%0A%20%20%20%20%20%20%3Ctd%3Ecos(x)%3C%2Ftd%3E%0A%20%20%20%20%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%0A%20%20%20%20%20%20%3Ctd%3Ecos(x)%3C%2Ftd%3E%0A%20%20%20%20%20%20%3Ctd%3E-sin(x)%3C%2Ftd%3E%0A%20%20%20%20%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%0A%20%20%20%20%20%20%3Ctd%3Ee%20%5B3%5D%20x%20%E2%86%A9%3C%2Ftd%3E%0A%20%20%20%20%20%20%3Ctd%3Ee%20%5B4%5D%20x%20%E2%86%A9%3C%2Ftd%3E%0A%20%20%20%20%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%0A%20%20%20%20%20%20%3Ctd%3Eln(x)%3C%2Ftd%3E%0A%20%20%20%20%20%20%3Ctd%3E1%2Fx%3C%2Ftd%3E%0A%20%20%20%20%3C%2Ftr%3E%0A%20%20%3C%2Ftbody%3E%0A%3C%2Ftable%3E" download="tabla-1.xml" class="table-download-btn" title="Descargar como XML">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          <span>XML</span>
+        </a>
+      </div>
+    </div>
+    <div class="table-wrapper">
+      <table id="table-1" class="article-table">
+  <thead>
+    <tr>
+      <th>Función <em>y</em></th>
+      <th>Fluxión <em>dy/dx</em></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td><em>x
+      <a href="#note-1" class="footnote-link" id="note-ref-1">
+        <sup>[1]</sup>
+      </a>
+      <span class="footnote-content" id="note-1">
+        n
+        <a href="#note-ref-1" class="footnote-back">↩</a>
+      </span>
+    </em></td><td><em>n x
+      <a href="#note-2" class="footnote-link" id="note-ref-2">
+        <sup>[2]</sup>
+      </a>
+      <span class="footnote-content" id="note-2">
+        n-1
+        <a href="#note-ref-2" class="footnote-back">↩</a>
+      </span>
+    </em></td></tr>
+    <tr><td><em>sin(x)</em></td><td><em>cos(x)</em></td></tr>
+    <tr><td><em>cos(x)</em></td><td><em>-sin(x)</em></td></tr>
+    <tr><td><em>e
+      <a href="#note-3" class="footnote-link" id="note-ref-3">
+        <sup>[3]</sup>
+      </a>
+      <span class="footnote-content" id="note-3">
+        x
+        <a href="#note-ref-3" class="footnote-back">↩</a>
+      </span>
+    </em></td><td><em>e
+      <a href="#note-4" class="footnote-link" id="note-ref-4">
+        <sup>[4]</sup>
+      </a>
+      <span class="footnote-content" id="note-4">
+        x
+        <a href="#note-ref-4" class="footnote-back">↩</a>
+      </span>
+    </em></td></tr>
+    <tr><td><em>ln(x)</em></td><td><em>1/x</em></td></tr>
+  </tbody>
+</table>
+    </div>
+  </div>
+
+
+<h2 id="main-conclusion">Conclusión</h2>
+
+<p>Hemos expuesto los fundamentos del cálculo fluxionario y su aplicación a la mecánica. Estos principios, que desarrollé en mi juventud en San Petersburgo y perfeccioné en Berlín, son la base sobre la que se asienta la filosofía natural moderna<span class="footnote-ref"><a href="#footnote-3" id="footnote-ref-3">[3]</a></span>. El análisis de los infinitos no es solo una herramienta matemática, sino el lenguaje mismo en el que está escrita la naturaleza.</p>
+
+<figure>
+  <figure class="image-figure" id="figure-1"><a href="https://images.unsplash.com/photo-1773558058275-13aa691252e0?q=80&w=532&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" target="_blank" rel="noopener noreferrer" class="image-link"><img src="https://images.unsplash.com/photo-1773558058275-13aa691252e0?q=80&w=532&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Formación rocosa abstracta, un reflejo de la geometría natural." style="max-width:100%; height:auto;" class="article-image">
+  <figcaption>Figura 1: La naturaleza, en su diversidad, obedece a principios matemáticos.</figcaption>
+</img></a><figcaption class="image-caption">Formación rocosa abstracta, un reflejo de la geometría natural.</figcaption></figure></figure>
+
+<div class="footnotes">
+  <p id="footnote-1"><a href="#footnote-ref-1">[1]</a> Newton llamaba a este concepto 'fluxión' (fluere = fluir). Leibniz, de forma independiente, lo llamó 'diferencial'. Hoy en día usamos el término 'derivada'.</p>
+  <p id="footnote-2"><a href="#footnote-ref-2">[2]</a> La notación \( \dot{x} \) para la fluxión es de Newton. La notación \( \frac{dy}{dx} \) es de Leibniz, y es la que ha prevalecido por su utilidad en la regla de la cadena.</p>
+  <p id="footnote-3"><a href="#footnote-ref-3">[3]</a> Euler se refiere aquí a su obra <em>Mechanica sive motus scientia analytice exposita</em> (1736), donde aplica el cálculo al estudio del movimiento. Ver <a href="#ref-euler-mech">Euler (1736)</a>.</p>
+</div>
         </section>
 
         <!-- REFERENCIAS -->
-        ${referencesHtml ? `
+        
         <section id="references">
           <h2>Referencias</h2>
-          ${referencesHtml}
+          <div class="references-list">
+  <h3 id="ref-bibliografia">Bibliografía</h3>
+  <div class="reference-item" id="ref-euler-intro">
+    Euler, Leonhard. 1748. <em>Introductio in analysin infinitorum</em>. Lausana: Apud Marcum-Michaelem Bousquet & Socios.
+  </div>
+
+  <div class="reference-item" id="ref-euler-mech">
+    ———. 1736. <em>Mechanica sive motus scientia analytice exposita</em>. 2 vols. San Petersburgo: Academia Imperial de Ciencias.
+  </div>
+
+  <div class="reference-item" id="ref-newton-princ">
+    Newton, Isaac. 1687. <em>Philosophiæ Naturalis Principia Mathematica</em>. Londres: Royal Society Press.
+  </div>
+
+  <div class="reference-item" id="ref-kline">
+    Kline, Morris. 1972. <em>Mathematical Thought from Ancient to Modern Times</em>. Nueva York: Oxford University Press.
+  </div>
+
+  <div class="reference-item" id="ref-boyer">
+    Boyer, Carl B. 1959. <em>The History of the Calculus and Its Conceptual Development</em>. Nueva York: Dover Publications.
+  </div>
+
+  <div class="reference-item" id="ref-jourdain">
+    Jourdain, Philip E. B. 1913. "The Origins of Cauchy's Conceptions of the Definite Integral and of the Continuity of a Function." <em>The Monist</em> 23 (3): 416-439.
+  </div>
+
+  <div class="reference-item" id="ref-thiele">
+    Thiele, Rüdiger. 2005. "The Mathematics and Science of Leonhard Euler (1707–1783)." En <em>Mathematics and the Historian's Craft: The Kenneth O. May Lectures</em>, editado por Glen Van Brummelen y Michael Kinyon, 81–140. Nueva York: Springer.
+  </div>
+
+  <div class="reference-item" id="ref-calinger">
+    Calinger, Ronald. 2016. <em>Leonhard Euler: Mathematical Genius in the Enlightenment</em>. Princeton: Princeton University Press.
+  </div>
+</div>
         </section>
-        ` : ''}
+        
 
         <!-- APÉNDICE -->
-        ${appendixHtml ? `
+        
         <section class="appendix-section" id="appendix">
           <h2>Apéndice</h2>
-          ${appendixHtml}
+          <h3 id="appendix-apendice-a-cronologia-de-las-obras-principales-de-euler">Apéndice A: Cronología de las obras principales de Euler</h3>
+
+
+  <div class="table-download-wrapper" id="table-2-wrapper">
+    <div class="table-header">
+      <span class="table-label">Tabla 2</span>
+      <div class="table-download-buttons">
+        <a href="data:text/csv;charset=utf-8,%EF%BB%BF%22A%C3%B1o%22%2C%22Obra%22%2C%22Campo%22%0A%221736%22%2C%22Mechanica%22%2C%22Mec%C3%A1nica%20anal%C3%ADtica%22%0A%221740%22%2C%22Tentamen%20novae%20theoriae%20musicae%22%2C%22Ac%C3%BAstica%20%2F%20M%C3%BAsica%22%0A%221744%22%2C%22Methodus%20inveniendi%20lineas%20curvas%22%2C%22C%C3%A1lculo%20de%20variaciones%22%0A%221748%22%2C%22Introductio%20in%20analysin%20infinitorum%22%2C%22An%C3%A1lisis%20matem%C3%A1tico%22%0A%221755%22%2C%22Institutiones%20calculi%20differentialis%22%2C%22C%C3%A1lculo%20diferencial%22%0A%221768-70%22%2C%22Lettres%20%C3%A0%20une%20princesse%20d'Allemagne%22%2C%22Divulgaci%C3%B3n%20cient%C3%ADfica%22" download="tabla-2.csv" class="table-download-btn" title="Descargar como CSV">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12h6"/><path d="M9 16h6"/><path d="M9 8h3"/><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+          <span>CSV</span>
+        </a>
+        <a href="data:application/vnd.ms-excel;charset=utf-8,%EF%BB%BF%3Ctable%3E%3Cthead%3E%3Ctr%3E%3Cth%3EA%C3%B1o%3C%2Fth%3E%3Cth%3EObra%3C%2Fth%3E%3Cth%3ECampo%3C%2Fth%3E%3C%2Ftr%3E%3C%2Fthead%3E%3Ctbody%3E%3Ctr%3E%3Ctd%3E1736%3C%2Ftd%3E%3Ctd%3EMechanica%3C%2Ftd%3E%3Ctd%3EMec%C3%A1nica%20anal%C3%ADtica%3C%2Ftd%3E%3C%2Ftr%3E%3Ctr%3E%3Ctd%3E1740%3C%2Ftd%3E%3Ctd%3ETentamen%20novae%20theoriae%20musicae%3C%2Ftd%3E%3Ctd%3EAc%C3%BAstica%20%2F%20M%C3%BAsica%3C%2Ftd%3E%3C%2Ftr%3E%3Ctr%3E%3Ctd%3E1744%3C%2Ftd%3E%3Ctd%3EMethodus%20inveniendi%20lineas%20curvas%3C%2Ftd%3E%3Ctd%3EC%C3%A1lculo%20de%20variaciones%3C%2Ftd%3E%3C%2Ftr%3E%3Ctr%3E%3Ctd%3E1748%3C%2Ftd%3E%3Ctd%3EIntroductio%20in%20analysin%20infinitorum%3C%2Ftd%3E%3Ctd%3EAn%C3%A1lisis%20matem%C3%A1tico%3C%2Ftd%3E%3C%2Ftr%3E%3Ctr%3E%3Ctd%3E1755%3C%2Ftd%3E%3Ctd%3EInstitutiones%20calculi%20differentialis%3C%2Ftd%3E%3Ctd%3EC%C3%A1lculo%20diferencial%3C%2Ftd%3E%3C%2Ftr%3E%3Ctr%3E%3Ctd%3E1768-70%3C%2Ftd%3E%3Ctd%3ELettres%20%C3%A0%20une%20princesse%20d'Allemagne%3C%2Ftd%3E%3Ctd%3EDivulgaci%C3%B3n%20cient%C3%ADfica%3C%2Ftd%3E%3C%2Ftr%3E%3C%2Ftbody%3E%3C%2Ftable%3E" download="tabla-2.xls" class="table-download-btn" title="Descargar como Excel">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
+          <span>Excel</span>
+        </a>
+        <a href="data:application/json;charset=utf-8,%7B%0A%20%20%22number%22%3A%202%2C%0A%20%20%22caption%22%3A%20null%2C%0A%20%20%22headers%22%3A%20%5B%0A%20%20%20%20%22A%C3%B1o%22%2C%0A%20%20%20%20%22Obra%22%2C%0A%20%20%20%20%22Campo%22%0A%20%20%5D%2C%0A%20%20%22rows%22%3A%20%5B%0A%20%20%20%20%5B%0A%20%20%20%20%20%20%221736%22%2C%0A%20%20%20%20%20%20%22Mechanica%22%2C%0A%20%20%20%20%20%20%22Mec%C3%A1nica%20anal%C3%ADtica%22%0A%20%20%20%20%5D%2C%0A%20%20%20%20%5B%0A%20%20%20%20%20%20%221740%22%2C%0A%20%20%20%20%20%20%22Tentamen%20novae%20theoriae%20musicae%22%2C%0A%20%20%20%20%20%20%22Ac%C3%BAstica%20%2F%20M%C3%BAsica%22%0A%20%20%20%20%5D%2C%0A%20%20%20%20%5B%0A%20%20%20%20%20%20%221744%22%2C%0A%20%20%20%20%20%20%22Methodus%20inveniendi%20lineas%20curvas%22%2C%0A%20%20%20%20%20%20%22C%C3%A1lculo%20de%20variaciones%22%0A%20%20%20%20%5D%2C%0A%20%20%20%20%5B%0A%20%20%20%20%20%20%221748%22%2C%0A%20%20%20%20%20%20%22Introductio%20in%20analysin%20infinitorum%22%2C%0A%20%20%20%20%20%20%22An%C3%A1lisis%20matem%C3%A1tico%22%0A%20%20%20%20%5D%2C%0A%20%20%20%20%5B%0A%20%20%20%20%20%20%221755%22%2C%0A%20%20%20%20%20%20%22Institutiones%20calculi%20differentialis%22%2C%0A%20%20%20%20%20%20%22C%C3%A1lculo%20diferencial%22%0A%20%20%20%20%5D%2C%0A%20%20%20%20%5B%0A%20%20%20%20%20%20%221768-70%22%2C%0A%20%20%20%20%20%20%22Lettres%20%C3%A0%20une%20princesse%20d'Allemagne%22%2C%0A%20%20%20%20%20%20%22Divulgaci%C3%B3n%20cient%C3%ADfica%22%0A%20%20%20%20%5D%0A%20%20%5D%2C%0A%20%20%22data%22%3A%20%5B%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22ao%22%3A%20%221736%22%2C%0A%20%20%20%20%20%20%22obra%22%3A%20%22Mechanica%22%2C%0A%20%20%20%20%20%20%22campo%22%3A%20%22Mec%C3%A1nica%20anal%C3%ADtica%22%0A%20%20%20%20%7D%2C%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22ao%22%3A%20%221740%22%2C%0A%20%20%20%20%20%20%22obra%22%3A%20%22Tentamen%20novae%20theoriae%20musicae%22%2C%0A%20%20%20%20%20%20%22campo%22%3A%20%22Ac%C3%BAstica%20%2F%20M%C3%BAsica%22%0A%20%20%20%20%7D%2C%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22ao%22%3A%20%221744%22%2C%0A%20%20%20%20%20%20%22obra%22%3A%20%22Methodus%20inveniendi%20lineas%20curvas%22%2C%0A%20%20%20%20%20%20%22campo%22%3A%20%22C%C3%A1lculo%20de%20variaciones%22%0A%20%20%20%20%7D%2C%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22ao%22%3A%20%221748%22%2C%0A%20%20%20%20%20%20%22obra%22%3A%20%22Introductio%20in%20analysin%20infinitorum%22%2C%0A%20%20%20%20%20%20%22campo%22%3A%20%22An%C3%A1lisis%20matem%C3%A1tico%22%0A%20%20%20%20%7D%2C%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22ao%22%3A%20%221755%22%2C%0A%20%20%20%20%20%20%22obra%22%3A%20%22Institutiones%20calculi%20differentialis%22%2C%0A%20%20%20%20%20%20%22campo%22%3A%20%22C%C3%A1lculo%20diferencial%22%0A%20%20%20%20%7D%2C%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22ao%22%3A%20%221768-70%22%2C%0A%20%20%20%20%20%20%22obra%22%3A%20%22Lettres%20%C3%A0%20une%20princesse%20d'Allemagne%22%2C%0A%20%20%20%20%20%20%22campo%22%3A%20%22Divulgaci%C3%B3n%20cient%C3%ADfica%22%0A%20%20%20%20%7D%0A%20%20%5D%0A%7D" download="tabla-2.json" class="table-download-btn" title="Descargar como JSON">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 20c-1.5 0-2.5-1-2.5-2.5v-3.5c0-1-1-1.5-2-1.5s-2-.5-2-1.5v-1c0-1 1-1.5 2-1.5s2-.5 2-1.5v-3.5c0-1.5 1-2.5 2.5-2.5"/><path d="M14 4c1.5 0 2.5 1 2.5 2.5v3.5c0 1 1 1.5 2 1.5s2 .5 2 1.5v1c0 1-1 1.5-2 1.5s-2 .5-2 1.5v3.5c0 1.5-1 2.5-2.5 2.5"/></svg>
+          <span>JSON</span>
+        </a>
+        <a href="data:text/plain;charset=utf-8,%5Cbegin%7Btable%7D%5Bh%5D%0A%5Ccentering%0A%5Clabel%7Btab%3A2%7D%0A%5Cbegin%7Btabular%7D%7B%7Cl%7Cl%7Cl%7C%7D%0A%5Chline%0AA%C3%B1o%20%26%20Obra%20%26%20Campo%20%5C%5C%0A%5Chline%0A1736%20%26%20Mechanica%20%26%20Mec%C3%A1nica%20anal%C3%ADtica%20%5C%5C%0A%5Chline%0A1740%20%26%20Tentamen%20novae%20theoriae%20musicae%20%26%20Ac%C3%BAstica%20%2F%20M%C3%BAsica%20%5C%5C%0A%5Chline%0A1744%20%26%20Methodus%20inveniendi%20lineas%20curvas%20%26%20C%C3%A1lculo%20de%20variaciones%20%5C%5C%0A%5Chline%0A1748%20%26%20Introductio%20in%20analysin%20infinitorum%20%26%20An%C3%A1lisis%20matem%C3%A1tico%20%5C%5C%0A%5Chline%0A1755%20%26%20Institutiones%20calculi%20differentialis%20%26%20C%C3%A1lculo%20diferencial%20%5C%5C%0A%5Chline%0A1768-70%20%26%20Lettres%20%C3%A0%20une%20princesse%20d'Allemagne%20%26%20Divulgaci%C3%B3n%20cient%C3%ADfica%20%5C%5C%0A%5Chline%0A%5Cend%7Btabular%7D%0A%5Cend%7Btable%7D" download="tabla-2.tex" class="table-download-btn" title="Descargar como LaTeX">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 4h-12l7 8-7 8h12"/></svg>
+          <span>LaTeX</span>
+        </a>
+        <a href="data:application/xml;charset=utf-8,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%0A%3Ctable%20id%3D%22table-2%22%20number%3D%222%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2Fxhtml%22%3E%0A%20%20%3Cthead%3E%0A%20%20%20%20%3Ctr%3E%0A%20%20%20%20%20%20%3Cth%3EA%C3%B1o%3C%2Fth%3E%0A%20%20%20%20%20%20%3Cth%3EObra%3C%2Fth%3E%0A%20%20%20%20%20%20%3Cth%3ECampo%3C%2Fth%3E%0A%20%20%20%20%3C%2Ftr%3E%0A%20%20%3C%2Fthead%3E%0A%20%20%3Ctbody%3E%0A%20%20%20%20%3Ctr%3E%0A%20%20%20%20%20%20%3Ctd%3E1736%3C%2Ftd%3E%0A%20%20%20%20%20%20%3Ctd%3EMechanica%3C%2Ftd%3E%0A%20%20%20%20%20%20%3Ctd%3EMec%C3%A1nica%20anal%C3%ADtica%3C%2Ftd%3E%0A%20%20%20%20%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%0A%20%20%20%20%20%20%3Ctd%3E1740%3C%2Ftd%3E%0A%20%20%20%20%20%20%3Ctd%3ETentamen%20novae%20theoriae%20musicae%3C%2Ftd%3E%0A%20%20%20%20%20%20%3Ctd%3EAc%C3%BAstica%20%2F%20M%C3%BAsica%3C%2Ftd%3E%0A%20%20%20%20%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%0A%20%20%20%20%20%20%3Ctd%3E1744%3C%2Ftd%3E%0A%20%20%20%20%20%20%3Ctd%3EMethodus%20inveniendi%20lineas%20curvas%3C%2Ftd%3E%0A%20%20%20%20%20%20%3Ctd%3EC%C3%A1lculo%20de%20variaciones%3C%2Ftd%3E%0A%20%20%20%20%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%0A%20%20%20%20%20%20%3Ctd%3E1748%3C%2Ftd%3E%0A%20%20%20%20%20%20%3Ctd%3EIntroductio%20in%20analysin%20infinitorum%3C%2Ftd%3E%0A%20%20%20%20%20%20%3Ctd%3EAn%C3%A1lisis%20matem%C3%A1tico%3C%2Ftd%3E%0A%20%20%20%20%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%0A%20%20%20%20%20%20%3Ctd%3E1755%3C%2Ftd%3E%0A%20%20%20%20%20%20%3Ctd%3EInstitutiones%20calculi%20differentialis%3C%2Ftd%3E%0A%20%20%20%20%20%20%3Ctd%3EC%C3%A1lculo%20diferencial%3C%2Ftd%3E%0A%20%20%20%20%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%0A%20%20%20%20%20%20%3Ctd%3E1768-70%3C%2Ftd%3E%0A%20%20%20%20%20%20%3Ctd%3ELettres%20%C3%A0%20une%20princesse%20d%26apos%3BAllemagne%3C%2Ftd%3E%0A%20%20%20%20%20%20%3Ctd%3EDivulgaci%C3%B3n%20cient%C3%ADfica%3C%2Ftd%3E%0A%20%20%20%20%3C%2Ftr%3E%0A%20%20%3C%2Ftbody%3E%0A%3C%2Ftable%3E" download="tabla-2.xml" class="table-download-btn" title="Descargar como XML">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          <span>XML</span>
+        </a>
+      </div>
+    </div>
+    <div class="table-wrapper">
+      <table style="width:100%; border-collapse: collapse; margin:20px 0; border:1px solid #ddd;" id="table-2" class="article-table">
+  <thead>
+    <tr style="background-color:#f2f2f2;">
+      <th style="padding:8px; border:1px solid #ddd;">Año</th>
+      <th style="padding:8px; border:1px solid #ddd;">Obra</th>
+      <th style="padding:8px; border:1px solid #ddd;">Campo</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td style="padding:8px; border:1px solid #ddd;">1736</td><td style="padding:8px; border:1px solid #ddd;"><em>Mechanica</em></td><td style="padding:8px; border:1px solid #ddd;">Mecánica analítica</td></tr>
+    <tr><td style="padding:8px; border:1px solid #ddd;">1740</td><td style="padding:8px; border:1px solid #ddd;"><em>Tentamen novae theoriae musicae</em></td><td style="padding:8px; border:1px solid #ddd;">Acústica / Música</td></tr>
+    <tr><td style="padding:8px; border:1px solid #ddd;">1744</td><td style="padding:8px; border:1px solid #ddd;"><em>Methodus inveniendi lineas curvas</em></td><td style="padding:8px; border:1px solid #ddd;">Cálculo de variaciones</td></tr>
+    <tr><td style="padding:8px; border:1px solid #ddd;">1748</td><td style="padding:8px; border:1px solid #ddd;"><em>Introductio in analysin infinitorum</em></td><td style="padding:8px; border:1px solid #ddd;">Análisis matemático</td></tr>
+    <tr><td style="padding:8px; border:1px solid #ddd;">1755</td><td style="padding:8px; border:1px solid #ddd;"><em>Institutiones calculi differentialis</em></td><td style="padding:8px; border:1px solid #ddd;">Cálculo diferencial</td></tr>
+    <tr><td style="padding:8px; border:1px solid #ddd;">1768-70</td><td style="padding:8px; border:1px solid #ddd;"><em>Lettres à une princesse d'Allemagne</em></td><td style="padding:8px; border:1px solid #ddd;">Divulgación científica</td></tr>
+  </tbody>
+</table>
+    </div>
+  </div>
+
+
+<h3 id="appendix-apendice-b-correspondencia-con-christian-goldbach-extracto">Apéndice B: Correspondencia con Christian Goldbach (extracto)</h3>
+
+<p><em>Carta del 7 de septiembre de 1745:</em></p>
+
+<blockquote>"...He estado reflexionando sobre la naturaleza de las funciones y su representación analítica. Me parece que toda función continua puede ser expresada mediante una serie infinita de potencias de la variable, aunque la convergencia de dicha serie debe ser examinada con cuidado. Este principio, que llamo desarrollo en serie de Taylor-Maclaurin, es de suma utilidad..."
+      <a href="#note-1" class="footnote-link" id="note-ref-1">
+        <sup>[1]</sup>
+      </a>
+      <span class="footnote-content" id="note-1">
+        †
+        <a href="#note-ref-1" class="footnote-back">↩</a>
+      </span>
+    </blockquote>
+
+<p id="fnA1">
+      <a href="#note-2" class="footnote-link" id="note-ref-2">
+        <sup>[2]</sup>
+      </a>
+      <span class="footnote-content" id="note-2">
+        †
+        <a href="#note-ref-2" class="footnote-back">↩</a>
+      </span>
+     Manuscrito conservado en el Archivo de la Academia de Ciencias de San Petersburgo. Publicado parcialmente en <em>Correspondence of Leonhard Euler with Christian Goldbach</em>, ed. Franz Lemmermeyer, Springer, 2015. <a href="#fnrefA1">↩</a></p>
         </section>
-        ` : ''}
+        
 
         <!-- LICENCIA -->
         <section class="license-section">
@@ -4008,7 +3169,7 @@ blockquote cite {
             <strong>Licencia:</strong> 
             Este artículo se publica bajo la licencia 
             <a href="https://creativecommons.org/licenses/by/4.0/deed.es" target="_blank" rel="license noopener">
-              ${ccLogoSvg} CC BY 4.0
+              <img src="https://bibliotecas.ucn.cl/wp-content/uploads/2025/04/by1.png" alt="CC BY 4.0" style="height: 1.2em; width: auto; vertical-align: middle;"> CC BY 4.0
             </a>
           </p>
         </section>
@@ -4028,20 +3189,20 @@ blockquote cite {
                 <div class="citation-item">
                   <strong>APA</strong>
                   <button class="copy-btn" onclick="copyText('apa-citation', this)">Copiar</button>
-                  <div id="apa-citation-mobile" style="margin-top:0.25rem;">${citations.apa}</div>
+                  <div id="apa-citation-mobile" style="margin-top:0.25rem;">Euler, L. (2025). Elementos de matemáticas y filosofía natural (Thomas Schmidt, Trad.; Elena Martínez Ruiz, Eds.). <em>Clásicos de la Ciencia</em>. https://www.revistacienciasestudiantes.com/collections/classic-science/articles/CC-2025-0520.html</div>
                 </div>
                 <div class="citation-item">
                   <strong>MLA</strong>
                   <button class="copy-btn" onclick="copyText('mla-citation', this)">Copiar</button>
-                  <div id="mla-citation-mobile" style="margin-top:0.25rem;">${citations.mla}</div>
+                  <div id="mla-citation-mobile" style="margin-top:0.25rem;">Leonhard Euler. "Elementos de matemáticas y filosofía natural." <em>Clásicos de la Ciencia</em>, traducido por Thomas Schmidt, editado por Elena Martínez Ruiz, 2025, https://www.revistacienciasestudiantes.com/collections/classic-science/articles/CC-2025-0520.html.</div>
                 </div>
                 <div class="citation-item">
                   <strong>Chicago</strong>
                   <button class="copy-btn" onclick="copyText('chicago-citation', this)">Copiar</button>
-                  <div id="chicago-citation-mobile" style="margin-top:0.25rem;">${citations.chicago}</div>
+                  <div id="chicago-citation-mobile" style="margin-top:0.25rem;">Leonhard Euler. "Elementos de matemáticas y filosofía natural." Traducido por Thomas Schmidt. Editado por Elena Martínez Ruiz. <em>Clásicos de la Ciencia</em>, 2025. https://www.revistacienciasestudiantes.com/collections/classic-science/articles/CC-2025-0520.html.</div>
                 </div>
-                 <a href="data:text/plain;charset=utf-8,${encodeURIComponent(citations.bibtex)}"
-                   download="${generateSlug(article['name-translated'] || article['name-original'])}.bib"
+                 <a href="data:text/plain;charset=utf-8,%40article%7Beuler_1748_elementos-de-matemat%2C%0A%20%20author%20%20%20%20%20%20%20%3D%20%7BLeonhard%20Euler%7D%2C%0A%20%20title%20%20%20%20%20%20%20%20%3D%20%7BElementos%20de%20matem%C3%A1ticas%20y%20filosof%C3%ADa%20natural%7D%2C%0A%20%20journaltitle%20%3D%20%7BRevista%20Nacional%20de%20las%20Ciencias%20para%20Estudiantes%7D%2C%0A%20%20series%20%20%20%20%20%20%20%3D%20%7BCl%C3%A1sicos%20de%20la%20Ciencia%7D%2C%0A%20%20translator%20%20%20%3D%20%7BThomas%20Schmidt%7D%2C%0A%20%20editor%20%20%20%20%20%20%20%3D%20%7BElena%20Mart%C3%ADnez%20Ruiz%7D%2C%0A%20%20year%20%20%20%20%20%20%20%20%20%3D%20%7B2025%7D%2C%0A%20%20origdate%20%20%20%20%20%3D%20%7B1748%7D%2C%0A%20%20url%20%20%20%20%20%20%20%20%20%20%3D%20%7Bhttps%3A%2F%2Fwww.revistacienciasestudiantes.com%2Fcollections%2Fclassic-science%2Farticles%2FCC-2025-0520.html%7D%0A%7D"
+                   download="elementos-de-matematicas-y-filosofia-natural.bib"
                    class="bibtex-download-btn" style="margin-left: 0;">
                   Descargar BibTeX
                 </a>
@@ -4051,38 +3212,54 @@ blockquote cite {
             <div id="mobile-info" class="tab-panel">
               <h4>Palabras clave</h4>
               <div class="keywords" style="margin-bottom: 1.5rem;">
-                ${(article.keywords || []).map(kw => `<span class="keyword-tag">${kw}</span>`).join('')}
+                <span class="keyword-tag">Euler</span><span class="keyword-tag">matemáticas</span><span class="keyword-tag">filosofía natural</span><span class="keyword-tag">cálculo</span><span class="keyword-tag">notación matemática</span><span class="keyword-tag">historia de la ciencia</span><span class="keyword-tag">análisis matemático</span><span class="keyword-tag">física matemática</span>
               </div>
               <h4>Detalles del documento</h4>
               <div class="metadata-item">
                 <span class="metadata-label">ID</span>
-                <span class="metadata-value">${article.id || 'N/A'}</span>
+                <span class="metadata-value">CC-2025-0520</span>
               </div>
               <div class="metadata-item">
                 <span class="metadata-label">Fecha original</span>
-                <span class="metadata-value">${article['original-date'] || 'N/A'}</span>
+                <span class="metadata-value">01-01-1748</span>
               </div>
               <div class="metadata-item">
                 <span class="metadata-label">Traducción</span>
-                <span class="metadata-value">${article.date || formatDate(new Date())}</span>
+                <span class="metadata-value">20-05-2025</span>
               </div>
             </div>
 
             <div id="mobile-notes" class="tab-panel">
               <h4>Notas al margen</h4>
-              ${marginNotes && marginNotes.length > 0 ? `
+              
               <ul class="margin-notes-list">
-                ${marginNotes.map(note => `
-                  <li class="margin-note-item" id="mobile-margin-${note.id}">
-                    <span class="margin-note-number">[${note.number}]</span>
-                    <span class="margin-note-content">${note.text}</span>
+                
+                  <li class="margin-note-item" id="mobile-margin-margin-1">
+                    <span class="margin-note-number">[1]</span>
+                    <span class="margin-note-content">Euler introduce aquí, de forma independiente a Newton, el concepto de <em>cálculo diferencial</em>, aunque con una notación más cercana a la de Leibniz (dx), que acabó imponiéndose.</span>
                     <span class="margin-note-backlink">
-                      <a href="#${note.id}" onclick="event.preventDefault(); scrollToMarginNote('${note.id}');">↩ Volver al texto</a>
+                      <a href="#margin-1" onclick="event.preventDefault(); scrollToMarginNote('margin-1');">↩ Volver al texto</a>
                     </span>
                   </li>
-                `).join('')}
+                
+                  <li class="margin-note-item" id="mobile-margin-margin-2">
+                    <span class="margin-note-number">[2]</span>
+                    <span class="margin-note-content">La serie de Taylor ya era conocida por Stirling y Maclaurin, pero Euler fue quien explotó su potencial de forma sistemática.</span>
+                    <span class="margin-note-backlink">
+                      <a href="#margin-2" onclick="event.preventDefault(); scrollToMarginNote('margin-2');">↩ Volver al texto</a>
+                    </span>
+                  </li>
+                
+                  <li class="margin-note-item" id="mobile-margin-margin-3">
+                    <span class="margin-note-number">[3]</span>
+                    <span class="margin-note-content">Un ejemplo de cómo las ideas de Euler pueden implementarse en un lenguaje de programación actual.</span>
+                    <span class="margin-note-backlink">
+                      <a href="#margin-3" onclick="event.preventDefault(); scrollToMarginNote('margin-3');">↩ Volver al texto</a>
+                    </span>
+                  </li>
+                
               </ul>
-              ` : '<p>No hay notas marginales en este documento.</p>'}
+              
             </div>
           </div>
         </div>
@@ -4105,27 +3282,27 @@ blockquote cite {
       <strong>APA</strong>
       <button class="copy-btn" onclick="copyText('apa-citation', this)">Copiar</button>
       <div id="apa-citation" style="margin-top:0.25rem;">
-        ${citations.apa}
+        Euler, L. (2025). Elementos de matemáticas y filosofía natural (Thomas Schmidt, Trad.; Elena Martínez Ruiz, Eds.). <em>Clásicos de la Ciencia</em>. https://www.revistacienciasestudiantes.com/collections/classic-science/articles/CC-2025-0520.html
       </div>
     </div>
     <div class="citation-item">
       <strong>MLA</strong>
       <button class="copy-btn" onclick="copyText('mla-citation', this)">Copiar</button>
       <div id="mla-citation" style="margin-top:0.25rem;">
-        ${citations.mla}
+        Leonhard Euler. "Elementos de matemáticas y filosofía natural." <em>Clásicos de la Ciencia</em>, traducido por Thomas Schmidt, editado por Elena Martínez Ruiz, 2025, https://www.revistacienciasestudiantes.com/collections/classic-science/articles/CC-2025-0520.html.
       </div>
     </div>
     <div class="citation-item">
       <strong>Chicago</strong>
       <button class="copy-btn" onclick="copyText('chicago-citation', this)">Copiar</button>
       <div id="chicago-citation" style="margin-top:0.25rem;">
-        ${citations.chicago}
+        Leonhard Euler. "Elementos de matemáticas y filosofía natural." Traducido por Thomas Schmidt. Editado por Elena Martínez Ruiz. <em>Clásicos de la Ciencia</em>, 2025. https://www.revistacienciasestudiantes.com/collections/classic-science/articles/CC-2025-0520.html.
       </div>
     </div>
     <div class="citation-item" style="border-bottom: none;">
   <strong>BibTeX</strong>
-  <a href="data:text/plain;charset=utf-8,${encodeURIComponent(citations.bibtex)}" 
-     download="${generateSlug(article['name-translated'] || article['name-original'])}.bib"
+  <a href="data:text/plain;charset=utf-8,%40article%7Beuler_1748_elementos-de-matemat%2C%0A%20%20author%20%20%20%20%20%20%20%3D%20%7BLeonhard%20Euler%7D%2C%0A%20%20title%20%20%20%20%20%20%20%20%3D%20%7BElementos%20de%20matem%C3%A1ticas%20y%20filosof%C3%ADa%20natural%7D%2C%0A%20%20journaltitle%20%3D%20%7BRevista%20Nacional%20de%20las%20Ciencias%20para%20Estudiantes%7D%2C%0A%20%20series%20%20%20%20%20%20%20%3D%20%7BCl%C3%A1sicos%20de%20la%20Ciencia%7D%2C%0A%20%20translator%20%20%20%3D%20%7BThomas%20Schmidt%7D%2C%0A%20%20editor%20%20%20%20%20%20%20%3D%20%7BElena%20Mart%C3%ADnez%20Ruiz%7D%2C%0A%20%20year%20%20%20%20%20%20%20%20%20%3D%20%7B2025%7D%2C%0A%20%20origdate%20%20%20%20%20%3D%20%7B1748%7D%2C%0A%20%20url%20%20%20%20%20%20%20%20%20%20%3D%20%7Bhttps%3A%2F%2Fwww.revistacienciasestudiantes.com%2Fcollections%2Fclassic-science%2Farticles%2FCC-2025-0520.html%7D%0A%7D" 
+     download="elementos-de-matematicas-y-filosofia-natural.bib"
      class="bibtex-download-btn"
      style="display: inline-flex; align-items: center; gap: 8px; margin-left: 1rem; color: var(--oxford-blue); text-decoration: none; font-size: 0.8rem; font-weight: 500;">
     <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
@@ -4136,7 +3313,17 @@ blockquote cite {
   </a>
   <!-- Opcional: mantener el preview del BibTeX para referencia -->
   <div style="margin-top: 0.5rem; font-family: monospace; font-size: 0.7rem; white-space: pre-wrap; background: var(--bg-soft); padding: 0.5rem; border-radius: 4px; max-height: 200px; overflow-y: auto;">
-    ${citations.bibtex}
+    @article{euler_1748_elementos-de-matemat,
+  author       = {Leonhard Euler},
+  title        = {Elementos de matemáticas y filosofía natural},
+  journaltitle = {Revista Nacional de las Ciencias para Estudiantes},
+  series       = {Clásicos de la Ciencia},
+  translator   = {Thomas Schmidt},
+  editor       = {Elena Martínez Ruiz},
+  year         = {2025},
+  origdate     = {1748},
+  url          = {https://www.revistacienciasestudiantes.com/collections/classic-science/articles/CC-2025-0520.html}
+}
   </div>
 </div>
 
@@ -4148,40 +3335,56 @@ blockquote cite {
           <h4>Detalles del documento</h4>
           <div class="metadata-item">
             <span class="metadata-label">ID</span>
-            <span class="metadata-value">${article.id || 'N/A'}</span>
+            <span class="metadata-value">CC-2025-0520</span>
           </div>
           <div class="metadata-item">
             <span class="metadata-label">Fecha original</span>
-            <span class="metadata-value">${article['original-date'] || 'N/A'}</span>
+            <span class="metadata-value">01-01-1748</span>
           </div>
           <div class="metadata-item">
             <span class="metadata-label">Traducción</span>
-            <span class="metadata-value">${article.date || formatDate(new Date())}</span>
+            <span class="metadata-value">20-05-2025</span>
           </div>
-          ${article.keywords && article.keywords.length > 0 ? `
+          
           <h4 style="margin-top:1rem;">Palabras clave</h4>
           <div class="keywords">
-            ${article.keywords.map(kw => `<span class="keyword-tag">${kw}</span>`).join('')}
+            <span class="keyword-tag">Euler</span><span class="keyword-tag">matemáticas</span><span class="keyword-tag">filosofía natural</span><span class="keyword-tag">cálculo</span><span class="keyword-tag">notación matemática</span><span class="keyword-tag">historia de la ciencia</span><span class="keyword-tag">análisis matemático</span><span class="keyword-tag">física matemática</span>
           </div>
-          ` : ''}
+          
         </div>
         
        <!-- NOTAS MARGINALES (no editoriales) -->
 <div id="notes-panel" class="tab-panel">
   <h4>Notas al margen</h4>
-  ${marginNotes && marginNotes.length > 0 ? `
+  
   <ul class="margin-notes-list">
-    ${marginNotes.map(note => `
-      <li class="margin-note-item" id="sidebar-margin-${note.id}">
-        <span class="margin-note-number">[${note.number}]</span>
-        <span class="margin-note-content">${note.text}</span>
+    
+      <li class="margin-note-item" id="sidebar-margin-margin-1">
+        <span class="margin-note-number">[1]</span>
+        <span class="margin-note-content">Euler introduce aquí, de forma independiente a Newton, el concepto de <em>cálculo diferencial</em>, aunque con una notación más cercana a la de Leibniz (dx), que acabó imponiéndose.</span>
         <span class="margin-note-backlink">
-          <a href="#${note.id}" onclick="event.preventDefault(); scrollToMarginNote('${note.id}');">↩ Volver al texto</a>
+          <a href="#margin-1" onclick="event.preventDefault(); scrollToMarginNote('margin-1');">↩ Volver al texto</a>
         </span>
       </li>
-    `).join('')}
+    
+      <li class="margin-note-item" id="sidebar-margin-margin-2">
+        <span class="margin-note-number">[2]</span>
+        <span class="margin-note-content">La serie de Taylor ya era conocida por Stirling y Maclaurin, pero Euler fue quien explotó su potencial de forma sistemática.</span>
+        <span class="margin-note-backlink">
+          <a href="#margin-2" onclick="event.preventDefault(); scrollToMarginNote('margin-2');">↩ Volver al texto</a>
+        </span>
+      </li>
+    
+      <li class="margin-note-item" id="sidebar-margin-margin-3">
+        <span class="margin-note-number">[3]</span>
+        <span class="margin-note-content">Un ejemplo de cómo las ideas de Euler pueden implementarse en un lenguaje de programación actual.</span>
+        <span class="margin-note-backlink">
+          <a href="#margin-3" onclick="event.preventDefault(); scrollToMarginNote('margin-3');">↩ Volver al texto</a>
+        </span>
+      </li>
+    
   </ul>
-  ` : '<p>No hay notas marginales en este documento.</p>'}
+  
 </div>
 </div>
 </aside>
@@ -4191,20 +3394,20 @@ blockquote cite {
   <footer class="footer">
     <div class="footer-container">
       <div class="footer-social">
-        <a href="${socialLinks.instagram}" target="_blank" rel="noopener" class="social-icon">
-          ${socialIcons.instagram}
+        <a href="https://www.instagram.com/revistanacionalcienciae" target="_blank" rel="noopener" class="social-icon">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073z"/><path d="M12 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4z"/><circle cx="18.406" cy="5.594" r="1.44"/></svg>
           <span class="social-label">Instagram</span>
         </a>
-        <a href="${socialLinks.youtube}" target="_blank" rel="noopener" class="social-icon">
-          ${socialIcons.youtube}
+        <a href="https://www.youtube.com/@RevistaNacionaldelasCienciaspa" target="_blank" rel="noopener" class="social-icon">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
           <span class="social-label">YouTube</span>
         </a>
-        <a href="${socialLinks.tiktok}" target="_blank" rel="noopener" class="social-icon">
-          ${socialIcons.tiktok}
+        <a href="https://www.tiktok.com/@revistacienciaestudiante" target="_blank" rel="noopener" class="social-icon">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M12.53.02C13.84 0 15.14.01 16.44 0c.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>
           <span class="social-label">TikTok</span>
         </a>
-        <a href="${socialLinks.spotify}" target="_blank" rel="noopener" class="social-icon">
-          ${socialIcons.spotify}
+        <a href="https://open.spotify.com/show/6amsgUkNXgUTD219XpuqOe" target="_blank" rel="noopener" class="social-icon">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.508 17.308c-.221.362-.689.473-1.05.252-2.983-1.823-6.738-2.237-11.162-1.226-.411.094-.823-.162-.917-.573-.094-.412.162-.823.573-.917 4.847-1.108 8.995-.635 12.305 1.386.36.221.472.69.251 1.05zm1.47-3.255c-.278.452-.865.594-1.317.316-3.414-2.098-8.62-2.706-12.657-1.479-.508.154-1.04-.136-1.194-.644-.154-.508.136-1.04.644-1.194 4.613-1.399 10.366-.719 14.256 1.67.452.278.594.865.316 1.317zm.126-3.374C14.653 7.64 7.29 7.394 3.05 8.681c-.604.183-1.246-.166-1.429-.77-.183-.604.166-1.246.77-1.429 4.883-1.482 13.014-1.201 18.238 1.902.544.323.72 1.034.397 1.578-.323.544-1.034.72-1.578.397z"/></svg>
           <span class="social-label">Spotify</span>
         </a>
       </div>
@@ -4231,13 +3434,23 @@ blockquote cite {
       </div>
 
       <div class="footer-bottom">
-        <p>© ${new Date().getFullYear()} ${JOURNAL_NAME_ES} · Colección Clásicos de la Ciencia</p>
+        <p>© 2026 Revista Nacional de las Ciencias para Estudiantes · Colección Clásicos de la Ciencia</p>
       </div>
     </div>
   </footer>
 
   <!-- MODALES DE AUTORES -->
-  ${authorModals}
+  
+    <div id="author-modal-leonhard-euler" class="author-modal">
+      <div class="author-modal-content">
+        <span class="author-modal-close" onclick="closeAuthorModal('leonhard-euler')">&times;</span>
+        <h3>Leonhard Euler</h3>
+        <p class="author-dates">15-04-1707 - 18-09-1783</p>
+        <div class="author-bio">Matemático y físico suizo. Realizó descubrimientos fundamentales en campos tan diversos como el cálculo infinitesimal, la teoría de grafos y la mecánica analítica. Introdujo gran parte de la notación matemática moderna.</div>
+        <p><a href="https://es.wikipedia.org/wiki/Leonhard_Euler" target="_blank" rel="noopener">Ver perfil externo →</a></p>
+      </div>
+    </div>
+    
 <script>
 // ========== FUNCIONES PARA MODALES DE AUTORES ==========
 function openAuthorModal(authorId) {
@@ -4796,153 +4009,4 @@ document.querySelectorAll('.author-modal-content').forEach(function(content) {
   
 
 </body>
-</html>`;
-}
-
-// ========== FUNCIÓN PARA GENERAR ÍNDICE DE LA COLECCIÓN ==========
-function generateCollectionIndex(articles) {
-  const indexHtml = `<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Clásicos de la Ciencia - Índice de la colección</title>
-  <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=IM+Fell+French+Canon:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --oxford-blue: #002147;
-      --british-green: #004225;
-      --accent-burgundy: #8b1e3f;
-      --cream-bg: #fdfcf8;
-      --text-main: #2c2c2c;
-      --border-color: #e0dcd0;
-    }
-    body {
-      font-family: 'IM Fell English', serif;
-      background-color: var(--cream-bg);
-      color: var(--text-main);
-      margin: 0;
-      padding: 0;
-      line-height: 1.6;
-    }
-    .header {
-      background: white;
-      border-bottom: 1px solid var(--border-color);
-      padding: 1rem 2rem;
-      text-align: center;
-    }
-    .collection-title {
-      font-family: 'IM Fell French Canon', serif;
-      font-size: 2.5rem;
-      color: var(--oxford-blue);
-      margin: 2rem 0 0.5rem;
-      font-style: italic;
-    }
-    .collection-subtitle {
-      font-family: 'Inter', sans-serif;
-      font-size: 0.9rem;
-      text-transform: uppercase;
-      letter-spacing: 3px;
-      color: var(--accent-burgundy);
-      margin-bottom: 2rem;
-    }
-    .main-container {
-      max-width: 1000px;
-      margin: 2rem auto;
-      padding: 0 2rem;
-    }
-    .articles-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 2rem;
-      margin-top: 2rem;
-    }
-    .article-card {
-      background: white;
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 1.5rem;
-      transition: transform 0.2s, box-shadow 0.2s;
-      text-decoration: none;
-      color: inherit;
-      display: block;
-    }
-    .article-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-    .article-id {
-      font-family: 'Inter', sans-serif;
-      font-size: 0.7rem;
-      color: var(--accent-burgundy);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 0.5rem;
-    }
-    .article-title {
-      font-family: 'IM Fell French Canon', serif;
-      font-size: 1.3rem;
-      color: var(--oxford-blue);
-      margin: 0.5rem 0;
-    }
-    .article-author {
-      font-family: 'Inter', sans-serif;
-      font-size: 0.9rem;
-      color: var(--text-main);
-      margin: 0.5rem 0;
-    }
-    .article-date {
-      font-family: 'Inter', sans-serif;
-      font-size: 0.8rem;
-      color: #666;
-      margin-top: 0.5rem;
-    }
-    .footer {
-      text-align: center;
-      padding: 3rem;
-      color: #666;
-      font-family: 'Inter', sans-serif;
-      font-size: 0.8rem;
-      border-top: 1px solid var(--border-color);
-      margin-top: 3rem;
-    }
-  </style>
-</head>
-<body>
-  <div class="header">
-    <div class="collection-title">Clásicos de la Ciencia</div>
-    <div class="collection-subtitle">Traducciones académicas · Edición crítica</div>
-  </div>
-  
-  <div class="main-container">
-    <p style="font-size:1.1rem; text-align:center; margin-bottom:2rem;">
-      La colección presenta traducciones al español de textos fundamentales de la historia de la ciencia, 
-      con aparato editorial moderado y notas críticas.
-    </p>
-    
-    <div class="articles-grid">
-      ${articles.map(article => `
-        <a href="${article.id}.html" class="article-card">
-          <div class="article-id">${article.id || 'CC-0000-0000'}</div>
-          <div class="article-title">${article['name-translated'] || article['name-original']}</div>
-          <div class="article-author">${article.author && article.author[0] ? article.author[0].name : ''}</div>
-          <div class="article-date">${article['original-date'] || ''}</div>
-        </a>
-      `).join('')}
-    </div>
-  </div>
-  
-  <div class="footer">
-    <p>© ${new Date().getFullYear()} Revista Nacional de las Ciencias para Estudiantes · Colección Clásicos de la Ciencia</p>
-    <p><a href="/" style="color:var(--oxford-blue);">Volver a la revista</a></p>
-  </div>
-</body>
-</html>`;
-
-  const indexPath = path.join(OUTPUT_DIR, 'index.html');
-  fs.writeFileSync(indexPath, indexHtml, 'utf8');
-  console.log(`✅ Índice generado: ${indexPath}`);
-}
-
-// ========== EJECUCIÓN ==========
-generateAll();
+</html>
