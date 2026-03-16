@@ -1,0 +1,70 @@
+name: Deploy Classic Science Collection to GitHub Pages
+
+on:
+  push:
+    branches: [main] # O tu rama principal (puede ser 'master')
+    paths:
+      # Se activa cuando hay cambios en los archivos de la colección
+      - 'colections/classic-science/metadata.json'
+      - 'colections/classic-science/generate.js'
+      - '.github/workflows/deploy-classic-science.yml'
+      # Opcional: si el package.json cambia (por si se actualizan dependencias)
+      - 'package.json'
+      - 'package-lock.json'
+  workflow_dispatch: # Permite ejecutar el workflow manualmente desde la interfaz de GitHub
+
+# Permisos necesarios para desplegar en GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Concurrencia: asegura que solo una instancia de este workflow se ejecute a la vez
+concurrency:
+  group: "pages-classic-science"
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      # 1. Obtener el código del repositorio
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Configurar Node.js (usando la versión 20 como en tu package.json)
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm' # Cachea las dependencias de npm para acelerar el proceso
+
+      # 3. Instalar las dependencias del proyecto
+      - name: Install dependencies
+        run: npm ci
+
+      # 4. Generar los archivos HTML de la colección
+      #    Ejecuta el script 'build:classic-science' definido en tu package.json
+      - name: Generate collection HTML
+        run: npm run build:classic-science
+
+      # 5. Configurar el entorno de GitHub Pages
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      # 6. Subir el ARTEFACTO (los archivos generados) para el despliegue
+      #    ¡IMPORTANTE! Subimos el contenido de la carpeta 'articles' al DIRECTORIO RAÍZ de Pages.
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Ruta a la carpeta que contiene los archivos HTML generados.
+          # El contenido de esta carpeta será la raíz de tu sitio Pages.
+          path: '.'
+
+      # 7. Desplegar el artefacto en GitHub Pages
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
