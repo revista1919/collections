@@ -4,8 +4,8 @@
   "description": "Revista Nacional de las Ciencias para Estudiantes - Generadores de contenido estático",
   "main": "index.js",
   "scripts": {
-    "generate:classic-science": "node colections/classic-science/generate.cjs",
-    "generate:classic-science:watch": "nodemon colections/classic-science/generate.cjs",
+    "generate:classic-science": "node colections/classic-science/generate.js",
+    "generate:classic-science:watch": "nodemon colections/classic-science/generate.js",
     "generate:all": "npm run generate:classic-science",
     "generate:all:watch": "concurrently \"npm:generate:classic-science:watch\"",
     "clean:classic-science": "rm -rf colections/classic-science/articles/*.html",
@@ -33,7 +33,7 @@
   "engines": {
     "node": ">=18.0.0"
   },
-  "type": "module",
+  "type": "commonjs",
   "workspaces": [
     "colections/*"
   ]

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="citation_title" content="Elementos de matemáticas y filosofía natural">
+  <meta name="citation_title" content="Sobre la relación entre el tiempo que tarda un cuerpo en deslizarse por la línea recta que une dos puntos dados y el tiempo mínimo en que, por la acción de la gravedad, pasa de uno a otro siguiendo un arco de cicloide.">
   <meta name="citation_publication_date" content="01-01-1748">
   <meta name="citation_journal_title" content="Revista Nacional de las Ciencias para Estudiantes - Clásicos de la Ciencia">
   <meta name="citation_issn" content="3087-2839">
@@ -13,7 +13,7 @@
   <meta name="citation_language" content="es">
   <meta name="description" content="Este manuscrito inédito, recientemente atribuido a Leonhard Euler, recoge los fundamentos de su pensamiento matemático y físico. Escrito originalmente en latín ...">
   <meta name="keywords" content="Euler, matemáticas, filosofía natural, cálculo, notación matemática, historia de la ciencia, análisis matemático, física matemática">
-  <title>Elementos de matemáticas y filosofía natural - Clásicos de la Ciencia</title>
+  <title>Sobre la relación entre el tiempo que tarda un cuerpo en deslizarse por la línea recta que une dos puntos dados y el tiempo mínimo en que, por la acción de la gravedad, pasa de uno a otro siguiendo un arco de cicloide. - Clásicos de la Ciencia</title>
   
   <!-- Fuentes: IM Fell para estilo clásico, Inter para modernidad, JetBrains Mono para código -->
   <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=IM+Fell+French+Canon:ital@0;1&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
@@ -58,10 +58,11 @@ body {
   
   /* Fondo con textura de papel y viñeta */
   background-color: var(--cream-bg);
-  background-image: 
-    radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.03) 100%),
-    url("https://www.transparenttextures.com/patterns/natural-paper.png");
-  background-attachment: fixed;
+background-image:
+  radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.03) 100%),
+  linear-gradient(rgb(255, 255, 255), rgba(255, 255, 255, 0.69)),
+  url("https://images.unsplash.com/photo-1615800098799-0ccb261b1f92");
+
   
   overflow-x: hidden;
   width: 100%;
@@ -281,28 +282,32 @@ p, h1, h2, h3, h4, h5, h6, li, blockquote, .article-content {
   width: 100%;
 }
 
-/* ===== TÍTULO ESTILO SEMINAL - EFECTO PAPEL SOBRE PAPEL ===== */
 .seminal-title-container {
-  text-align: center;
-  padding: 80px 40px;
-  margin-bottom: 50px;
-  
-  /* Degradado que imita desgaste por tiempo */
-  background: linear-gradient(135deg, #fdfcf8 0%, #f4eee1 100%);
-  
-  /* Borde tipo "Gofre" con relieve */
-  border: 1px solid #dcd7c9;
-  
-  /* Sombras para dar profundidad */
-  box-shadow: 
-    inset 0 0 30px rgba(0,0,0,0.02),
-    0 5px 15px rgba(0,0,0,0.05);
-  
-  position: relative;
-  overflow: visible;
-  transition: transform 0.3s ease;
+    text-align: center;
+    padding: 100px 60px; /* Aumentamos el padding para dar "aire" de importancia */
+    margin: 40px auto 60px auto;
+    max-width: 900px;
+    
+    /* FONDO: Usamos el crema más claro para que "brille" sobre el fondo de la página */
+    background-color: var(--cream-bg);
+    background-image: 
+        url("https://www.transparenttextures.com/patterns/natural-paper.png"), /* Textura física */
+        radial-gradient(circle at center, rgba(255,255,255,0.8) 0%, transparent 100%);
+    
+    /* EL MARCO: Un borde doble sutil es la marca de la elegancia británica */
+    border: 1px solid rgba(197, 160, 89, 0.3); /* Borde oro muy suave */
+    outline: 1px solid rgba(197, 160, 89, 0.3);
+    outline-offset: -15px; /* Crea un recuadro interno */
+    
+    /* SOMBRA: Una sombra muy ancha y muy suave para dar "peso visual" */
+    box-shadow: 
+        0 30px 70px rgba(0, 0, 0, 0.07),
+        inset 0 0 50px rgba(255, 255, 255, 0.5);
+    
+    position: relative;
+    overflow: visible;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
-
 .seminal-title-container:hover {
   transform: translateY(-5px);
 }
@@ -367,35 +372,109 @@ p, h1, h2, h3, h4, h5, h6, li, blockquote, .article-content {
   display: block;
   margin-bottom: 15px;
 }
-
+/* ===== TÍTULO ESTILO OXFORD UNIVERSITY PRESS ===== */
 .main-classic-title {
-  font-family: 'IM Fell French Canon', serif;
-  font-size: 3.5rem;
-  line-height: 1.1;
-  color: var(--oxford-blue);
-  font-style: italic;
-  margin: 15px 0;
-  font-weight: normal;
+  /* Baskervville: la elegancia británica definitiva */
+  font-family: 'Baskervville', serif;
   
-  /* Efecto de impresión en papel */
-  text-shadow: 0.5px 0.5px 1px rgba(0, 33, 71, 0.2);
-  letter-spacing: -0.01em;
-}
-
-/* Tinta rubricada - primera palabra en rojo */
-.main-classic-title::first-line {
-  color: #8b0000;
-}
-
-.original-title {
-  font-family: 'IM Fell English', serif;
-  font-variant: small-caps;
-  letter-spacing: 0.1em;
-  font-size: 1.1rem;
-  color: #555;
-  margin-top: 0;
+  /* Tamaño fluido: se adapta desde móvil (1.8rem) hasta escritorio grande (4.5rem) */
+  font-size: clamp(1.8rem, 6vw, 4.5rem);
+  
+  /* Line-height ajustado para títulos largos (más compacto) */
+  line-height: 1.05;
+  
+  /* Color Oxford Blue SÓLIDO (sin gradiente) */
+  color: var(--oxford-blue);
+  
+  /* La itálica de Baskerville es pura elegancia académica */
   font-style: italic;
+  font-weight: 400;
+  
+  /* Espaciado profesional */
+  letter-spacing: -0.02em;
+  word-spacing: 0.05em;
+  
+  /* Márgenes automáticos para centrado perfecto */
+  margin: 20px auto;
+  
+  /* Máximo ancho controlado para evitar líneas ridículamente largas */
+  max-width: 900px;
+  
+  /* Sombra tipo "letterpress" - parece hundido en el papel */
+  text-shadow: 
+    0px 1px 1px rgba(255, 255, 255, 0.8),
+    0.5px 0.5px 2px rgba(0, 26, 54, 0.15);
+  
+  /* Ligaduras tipográficas clásicas */
+  font-variant-ligatures: common-ligatures discretionary-ligatures;
+  font-kerning: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  
+  /* Control de saltos de línea para títulos larguísimos */
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  hyphens: auto;
 }
+
+/* TÍTULOS EXTRA LARGOS - Casos especiales */
+.main-classic-title--very-long {
+  font-size: clamp(1.5rem, 5vw, 3.2rem);
+  line-height: 1.2;
+  max-width: 800px;
+}
+
+/* PRIMERA LÍNEA CON ÉNFASIS (efecto "capital" moderno) */
+.main-classic-title::first-line {
+  font-weight: 500;
+  color: var(--oxford-blue);
+  text-shadow: 
+    0px 1px 1px rgba(255, 255, 255, 0.9),
+    0.8px 0.8px 3px rgba(0, 26, 54, 0.2);
+}
+
+/* EFECTO DE TINTA REALISTA (sutil) */
+.main-classic-title {
+  position: relative;
+}
+
+.main-classic-title::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(
+    ellipse at 30% 40%,
+    rgba(0, 26, 54, 0.03) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+  mix-blend-mode: multiply;
+}
+/* ===== TÍTULO ORIGINAL (SUBTÍTULO) ===== */
+.original-title {
+  font-family: 'Baskervville', serif;
+  font-size: clamp(1rem, 3vw, 1.3rem);
+  color: var(--text-muted);
+  font-style: italic;
+  font-variant: small-caps;
+  letter-spacing: 0.15em;
+  margin-top: 0.5rem;
+  opacity: 0.8;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+  word-spacing: 0.1em;
+  
+  /* Línea decorativa sutil */
+  border-top: 1px solid rgba(197, 160, 89, 0.2);
+  padding-top: 1rem;
+  display: inline-block;
+}
+
+
 
 .title-separator {
   width: 150px;
@@ -1720,35 +1799,278 @@ h2 {
     display: block; /* MOSTRAR LA INFO MÓVIL */
   }
 }
-/* ===== ECUACIONES ===== */
-.MathJax_Display, .math-container {
+/* ===== ECUACIONES CON ESTILO MANUSCRITO ANTIGUO ===== */
+.MathJax, .MathJax_Display, .MathJax_CHTML, .math-container {
   margin: 2rem 0 !important;
-  padding: 1.5rem 0.5rem;
-  background: linear-gradient(to right, transparent, var(--bg-soft), transparent);
-  border-top: 1px solid var(--border-color);
-  border-bottom: 1px solid var(--border-color);
+  padding: 0.5rem 0 !important;
+  
+  /* SIN FONDO, SIN BORDES - se fusiona con el texto */
+  background: transparent !important;
+  border: none !important;
+  
+  /* Tinta antigua - textura y peso */
+  color: #2a2a2a !important;
+  text-shadow: 
+    0.5px 0.5px 0 rgba(0, 0, 0, 0.1),
+    1px 1px 1px rgba(0, 0, 0, 0.02);
+  
+  /* Pequeña irregularidad en el peso */
+  font-weight: 400;
+  
+  /* Transiciones suaves */
+  transition: all 0.2s ease;
+  
+  /* Para ecuaciones largas, scroll pero con estilo */
   overflow-x: auto;
   overflow-y: hidden;
-  -webkit-overflow-scrolling: touch;
-  max-width: 100%;
   scrollbar-width: thin;
 }
 
+/* Efecto de "tinta fresca" en hover - como si acabaran de escribirla */
+.MathJax:hover, .math-container:hover {
+  text-shadow: 
+    0.8px 0.8px 0 rgba(139, 30, 63, 0.15),
+    2px 2px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* Variables matemáticas con estilo manuscrito */
+.MathJax .mjx-char, .MathJax_CHTML .mjx-char {
+  font-family: 'IM Fell English', 'Garamond', serif !important;
+  filter: none; /* Sin efectos digitales */
+  transition: color 0.2s ease;
+}
+
+/* Efecto de "anotación manuscrita" en hover para variables importantes */
+.MathJax .mjx-char:hover {
+  color: var(--accent-burgundy) !important;
+  cursor: help;
+  position: relative;
+}
+
+/* Tooltip estilo manuscrito para variables */
+.MathJax .mjx-char[data-mjx-variable]:hover::after {
+  content: attr(data-mjx-variable);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--cream-bg);
+  border: 1px solid var(--old-gold);
+  padding: 4px 8px;
+  font-family: 'IM Fell English', serif;
+  font-size: 0.7rem;
+  white-space: nowrap;
+  box-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+  z-index: 100;
+  pointer-events: none;
+  color: var(--oxford-blue);
+  font-style: italic;
+}
+
+/* Scrollbar con estilo antiguo para ecuaciones largas */
 .MathJax_Display::-webkit-scrollbar,
 .math-container::-webkit-scrollbar {
-  height: 6px;
+  height: 4px;
+  background: transparent;
 }
 
 .MathJax_Display::-webkit-scrollbar-track,
 .math-container::-webkit-scrollbar-track {
-  background: var(--border-color);
-  border-radius: 3px;
+  background: rgba(197, 160, 89, 0.1);
+  border-radius: 2px;
 }
 
 .MathJax_Display::-webkit-scrollbar-thumb,
 .math-container::-webkit-scrollbar-thumb {
-  background: var(--oxford-blue);
-  border-radius: 3px;
+  background: var(--old-gold);
+  border-radius: 2px;
+  opacity: 0.5;
+}
+
+.MathJax_Display::-webkit-scrollbar-thumb:hover,
+.math-container::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-burgundy);
+}
+
+/* ===== ECUACIONES DESTACADAS (ESPECÍMENES) ===== */
+/* Solo para las ecuaciones más importantes */
+.equation-specimen {
+  margin: 3rem auto;
+  max-width: 90%;
+  position: relative;
+  
+  /* Marco invisible con sutiles ornamentos */
+  background: linear-gradient(145deg, transparent 30%, rgba(197, 160, 89, 0.02) 70%);
+  padding: 2rem 1rem;
+  
+  /* Líneas decorativas muy sutiles */
+  border-top: 1px solid rgba(197, 160, 89, 0.15);
+  border-bottom: 1px solid rgba(197, 160, 89, 0.15);
+  
+  /* Sombra interna que imita hendidura del papel */
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.02);
+}
+
+/* Etiqueta de "Teorema" o "Proposición" */
+.equation-label {
+  font-family: 'IM Fell English', serif;
+  font-variant: small-caps;
+  color: var(--accent-burgundy);
+  font-size: 0.75rem;
+  letter-spacing: 3px;
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--cream-bg);
+  padding: 0 1rem;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Número de ecuación estilo antiguo */
+.equation-number {
+  font-family: 'IM Fell English', serif;
+  font-style: italic;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  position: absolute;
+  bottom: -8px;
+  right: 20px;
+  background: var(--cream-bg);
+  padding: 0 0.5rem;
+}
+
+/* ===== ANOTACIONES AL MARGEN PARA ECUACIONES ===== */
+.math-annotation {
+  position: absolute;
+  right: calc(100% + 20px);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 180px;
+  font-family: 'IM Fell English', serif;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--text-light);
+  text-align: right;
+  border-right: 1px solid var(--old-gold);
+  padding-right: 12px;
+  opacity: 0.7;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.math-annotation.left {
+  left: calc(100% + 20px);
+  right: auto;
+  text-align: left;
+  border-right: none;
+  border-left: 1px solid var(--old-gold);
+  padding-right: 0;
+  padding-left: 12px;
+}
+
+.math-annotation:hover {
+  opacity: 1;
+}
+
+/* Para anotaciones dentro del texto de la ecuación */
+.math-note {
+  display: inline-block;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-style: italic;
+  margin-left: 0.5rem;
+  vertical-align: middle;
+  border-left: 1px solid var(--old-gold);
+  padding-left: 0.5rem;
+  line-height: 1.2;
+}
+
+/* ===== NÚMEROS CON ESTILO ANTIGUO (OLD STYLE) ===== */
+.oldstyle-nums {
+  font-variant-numeric: oldstyle-nums;
+  -moz-font-feature-settings: "onum";
+  -webkit-font-feature-settings: "onum";
+  font-feature-settings: "onum";
+}
+
+/* Aplicar a ecuaciones y números */
+.MathJax .mjx-num, 
+.equation-number,
+.page-number {
+  font-variant-numeric: oldstyle-nums;
+  -moz-font-feature-settings: "onum";
+  -webkit-font-feature-settings: "onum";
+  font-feature-settings: "onum";
+}
+
+/* ===== FRACCIONES CON ESTILO MANUSCRITO ===== */
+.MathJax .mjx-frac {
+  font-size: 0.9em; /* Fracciones ligeramente más pequeñas como en manuscritos */
+}
+
+.MathJax .mjx-frac:hover {
+  background: rgba(197, 160, 89, 0.05);
+  border-radius: 2px;
+}
+
+/* ===== SÍMBOLOS ESPECIALES CON CARÁCTER ===== */
+/* Integrales con cola más larga como en manuscritos antiguos */
+.MathJax .mjx-mo[data-mjx-name="int"] {
+  transform: scale(1.2, 1.1);
+  display: inline-block;
+}
+
+/* Símbolos de suma y producto con más peso */
+.MathJax .mjx-mo[data-mjx-name="sum"],
+.MathJax .mjx-mo[data-mjx-name="prod"] {
+  font-weight: 600;
+  transform: scale(1.1);
+}
+
+/* ===== RESPONSIVE PARA ECUACIONES ===== */
+@media (max-width: 1100px) {
+  .math-annotation {
+    position: static;
+    width: auto;
+    margin: 0.5rem 0 0.5rem 1rem;
+    text-align: left;
+    border-right: none;
+    border-left: 2px solid var(--old-gold);
+    padding-left: 0.75rem;
+    opacity: 1;
+    transform: none;
+  }
+  
+  .equation-specimen {
+    max-width: 100%;
+    padding: 1.5rem 0.5rem;
+  }
+  
+  .equation-label {
+    font-size: 0.65rem;
+    white-space: normal;
+    text-align: center;
+    width: 100%;
+    padding: 0 0.5rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .MathJax, .MathJax_Display {
+    font-size: 0.9rem;
+  }
+  
+  .equation-specimen {
+    padding: 1rem 0.25rem;
+  }
+  
+  .math-annotation {
+    margin-left: 0.5rem;
+    padding-left: 0.5rem;
+    font-size: 0.7rem;
+  }
 }
 
 /* ===== LISTAS ===== */
@@ -2422,7 +2744,26 @@ blockquote cite {
   letter-spacing: 4px;
   padding-top: 30px;
 }
+/* EFECTO DE TINTA REALISTA (USAR CON MODERACIÓN) */
+.main-classic-title {
+  position: relative;
+}
 
+.main-classic-title::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(
+    ellipse at 30% 40%,
+    rgba(0, 26, 54, 0.03) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+  mix-blend-mode: multiply;
+}
 /* ===== RESPONSIVE ===== */
 @media (max-width: 1100px) {
   .main-wrapper {
@@ -2763,10 +3104,10 @@ blockquote cite {
       <article>
         <!-- TÍTULO SEMINAL -->
         <div class="seminal-title-container">
-          <span class="collection-tag">Clásicos de la Ciencia</span>
-          <h1 class="main-classic-title">Elementos de matemáticas y filosofía natural</h1>
-          <div class="original-title">Elementa matheseos et philosophiae naturalis</div>
-          <div class="title-separator"></div>
+  <span class="collection-tag">Clásicos de la Ciencia</span>
+  <h1 class="main-classic-title" data-title-length="218">Sobre la relación entre el tiempo que tarda un cuerpo en deslizarse por la línea recta que une dos puntos dados y el tiempo mínimo en que, por la acción de la gravedad, pasa de uno a otro siguiendo un arco de cicloide.</h1>
+  <div class="original-title">Elementa matheseos et philosophiae naturalis</div>
+  <div class="title-separator"></div>
           
           <!-- METADATA DE ARCHIVO -->
           <div class="archive-metadata">
@@ -2947,34 +3288,34 @@ while t </code></pre>
 <p>A continuación, presentamos una tabla con algunas funciones comunes y sus fluxiones (derivadas), que son de utilidad para el físico:</p>
 
 
-  <div class="table-download-wrapper" id="table-1-wrapper">
-    <div class="table-header">
-      <span class="table-label">Tabla 1</span>
-      <div class="table-download-buttons">
-        <a href="data:text/csv;charset=utf-8,%EF%BB%BF%22Funci%C3%B3n%20y%22%2C%22Fluxi%C3%B3n%20dy%2Fdx%22%0A%22x%20%5B1%5D%20n%20%E2%86%A9%22%2C%22n%20x%20%5B2%5D%20n-1%20%E2%86%A9%22%0A%22sin(x)%22%2C%22cos(x)%22%0A%22cos(x)%22%2C%22-sin(x)%22%0A%22e%20%5B3%5D%20x%20%E2%86%A9%22%2C%22e%20%5B4%5D%20x%20%E2%86%A9%22%0A%22ln(x)%22%2C%221%2Fx%22" download="tabla-1.csv" class="table-download-btn" title="Descargar como CSV">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12h6"/><path d="M9 16h6"/><path d="M9 8h3"/><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
-          <span>CSV</span>
-        </a>
-        <a href="data:application/vnd.ms-excel;charset=utf-8,%EF%BB%BF%3Ctable%3E%3Cthead%3E%3Ctr%3E%3Cth%3EFunci%C3%B3n%20y%3C%2Fth%3E%3Cth%3EFluxi%C3%B3n%20dy%2Fdx%3C%2Fth%3E%3C%2Ftr%3E%3C%2Fthead%3E%3Ctbody%3E%3Ctr%3E%3Ctd%3Ex%20%5B1%5D%20n%20%E2%86%A9%3C%2Ftd%3E%3Ctd%3En%20x%20%5B2%5D%20n-1%20%E2%86%A9%3C%2Ftd%3E%3C%2Ftr%3E%3Ctr%3E%3Ctd%3Esin(x)%3C%2Ftd%3E%3Ctd%3Ecos(x)%3C%2Ftd%3E%3C%2Ftr%3E%3Ctr%3E%3Ctd%3Ecos(x)%3C%2Ftd%3E%3Ctd%3E-sin(x)%3C%2Ftd%3E%3C%2Ftr%3E%3Ctr%3E%3Ctd%3Ee%20%5B3%5D%20x%20%E2%86%A9%3C%2Ftd%3E%3Ctd%3Ee%20%5B4%5D%20x%20%E2%86%A9%3C%2Ftd%3E%3C%2Ftr%3E%3Ctr%3E%3Ctd%3Eln(x)%3C%2Ftd%3E%3Ctd%3E1%2Fx%3C%2Ftd%3E%3C%2Ftr%3E%3C%2Ftbody%3E%3C%2Ftable%3E" download="tabla-1.xls" class="table-download-btn" title="Descargar como Excel">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
-          <span>Excel</span>
-        </a>
-        <a href="data:application/json;charset=utf-8,%7B%0A%20%20%22number%22%3A%201%2C%0A%20%20%22caption%22%3A%20null%2C%0A%20%20%22headers%22%3A%20%5B%0A%20%20%20%20%22Funci%C3%B3n%20y%22%2C%0A%20%20%20%20%22Fluxi%C3%B3n%20dy%2Fdx%22%0A%20%20%5D%2C%0A%20%20%22rows%22%3A%20%5B%0A%20%20%20%20%5B%0A%20%20%20%20%20%20%22x%20%5B1%5D%20n%20%E2%86%A9%22%2C%0A%20%20%20%20%20%20%22n%20x%20%5B2%5D%20n-1%20%E2%86%A9%22%0A%20%20%20%20%5D%2C%0A%20%20%20%20%5B%0A%20%20%20%20%20%20%22sin(x)%22%2C%0A%20%20%20%20%20%20%22cos(x)%22%0A%20%20%20%20%5D%2C%0A%20%20%20%20%5B%0A%20%20%20%20%20%20%22cos(x)%22%2C%0A%20%20%20%20%20%20%22-sin(x)%22%0A%20%20%20%20%5D%2C%0A%20%20%20%20%5B%0A%20%20%20%20%20%20%22e%20%5B3%5D%20x%20%E2%86%A9%22%2C%0A%20%20%20%20%20%20%22e%20%5B4%5D%20x%20%E2%86%A9%22%0A%20%20%20%20%5D%2C%0A%20%20%20%20%5B%0A%20%20%20%20%20%20%22ln(x)%22%2C%0A%20%20%20%20%20%20%221%2Fx%22%0A%20%20%20%20%5D%0A%20%20%5D%2C%0A%20%20%22data%22%3A%20%5B%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22funcin_y%22%3A%20%22x%20%5B1%5D%20n%20%E2%86%A9%22%2C%0A%20%20%20%20%20%20%22fluxin_dydx%22%3A%20%22n%20x%20%5B2%5D%20n-1%20%E2%86%A9%22%0A%20%20%20%20%7D%2C%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22funcin_y%22%3A%20%22sin(x)%22%2C%0A%20%20%20%20%20%20%22fluxin_dydx%22%3A%20%22cos(x)%22%0A%20%20%20%20%7D%2C%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22funcin_y%22%3A%20%22cos(x)%22%2C%0A%20%20%20%20%20%20%22fluxin_dydx%22%3A%20%22-sin(x)%22%0A%20%20%20%20%7D%2C%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22funcin_y%22%3A%20%22e%20%5B3%5D%20x%20%E2%86%A9%22%2C%0A%20%20%20%20%20%20%22fluxin_dydx%22%3A%20%22e%20%5B4%5D%20x%20%E2%86%A9%22%0A%20%20%20%20%7D%2C%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22funcin_y%22%3A%20%22ln(x)%22%2C%0A%20%20%20%20%20%20%22fluxin_dydx%22%3A%20%221%2Fx%22%0A%20%20%20%20%7D%0A%20%20%5D%0A%7D" download="tabla-1.json" class="table-download-btn" title="Descargar como JSON">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 20c-1.5 0-2.5-1-2.5-2.5v-3.5c0-1-1-1.5-2-1.5s-2-.5-2-1.5v-1c0-1 1-1.5 2-1.5s2-.5 2-1.5v-3.5c0-1.5 1-2.5 2.5-2.5"/><path d="M14 4c1.5 0 2.5 1 2.5 2.5v3.5c0 1 1 1.5 2 1.5s2 .5 2 1.5v1c0 1-1 1.5-2 1.5s-2 .5-2 1.5v3.5c0 1.5-1 2.5-2.5 2.5"/></svg>
-          <span>JSON</span>
-        </a>
-        <a href="data:text/plain;charset=utf-8,%5Cbegin%7Btable%7D%5Bh%5D%0A%5Ccentering%0A%5Clabel%7Btab%3A1%7D%0A%5Cbegin%7Btabular%7D%7B%7Cl%7Cl%7C%7D%0A%5Chline%0AFunci%C3%B3n%20y%20%26%20Fluxi%C3%B3n%20dy%2Fdx%20%5C%5C%0A%5Chline%0Ax%20%5B1%5D%20n%20%E2%86%A9%20%26%20n%20x%20%5B2%5D%20n-1%20%E2%86%A9%20%5C%5C%0A%5Chline%0Asin(x)%20%26%20cos(x)%20%5C%5C%0A%5Chline%0Acos(x)%20%26%20-sin(x)%20%5C%5C%0A%5Chline%0Ae%20%5B3%5D%20x%20%E2%86%A9%20%26%20e%20%5B4%5D%20x%20%E2%86%A9%20%5C%5C%0A%5Chline%0Aln(x)%20%26%201%2Fx%20%5C%5C%0A%5Chline%0A%5Cend%7Btabular%7D%0A%5Cend%7Btable%7D" download="tabla-1.tex" class="table-download-btn" title="Descargar como LaTeX">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 4h-12l7 8-7 8h12"/></svg>
-          <span>LaTeX</span>
-        </a>
-        <a href="data:application/xml;charset=utf-8,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%0A%3Ctable%20id%3D%22table-1%22%20number%3D%221%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2Fxhtml%22%3E%0A%20%20%3Cthead%3E%0A%20%20%20%20%3Ctr%3E%0A%20%20%20%20%20%20%3Cth%3EFunci%C3%B3n%20y%3C%2Fth%3E%0A%20%20%20%20%20%20%3Cth%3EFluxi%C3%B3n%20dy%2Fdx%3C%2Fth%3E%0A%20%20%20%20%3C%2Ftr%3E%0A%20%20%3C%2Fthead%3E%0A%20%20%3Ctbody%3E%0A%20%20%20%20%3Ctr%3E%0A%20%20%20%20%20%20%3Ctd%3Ex%20%5B1%5D%20n%20%E2%86%A9%3C%2Ftd%3E%0A%20%20%20%20%20%20%3Ctd%3En%20x%20%5B2%5D%20n-1%20%E2%86%A9%3C%2Ftd%3E%0A%20%20%20%20%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%0A%20%20%20%20%20%20%3Ctd%3Esin(x)%3C%2Ftd%3E%0A%20%20%20%20%20%20%3Ctd%3Ecos(x)%3C%2Ftd%3E%0A%20%20%20%20%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%0A%20%20%20%20%20%20%3Ctd%3Ecos(x)%3C%2Ftd%3E%0A%20%20%20%20%20%20%3Ctd%3E-sin(x)%3C%2Ftd%3E%0A%20%20%20%20%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%0A%20%20%20%20%20%20%3Ctd%3Ee%20%5B3%5D%20x%20%E2%86%A9%3C%2Ftd%3E%0A%20%20%20%20%20%20%3Ctd%3Ee%20%5B4%5D%20x%20%E2%86%A9%3C%2Ftd%3E%0A%20%20%20%20%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%0A%20%20%20%20%20%20%3Ctd%3Eln(x)%3C%2Ftd%3E%0A%20%20%20%20%20%20%3Ctd%3E1%2Fx%3C%2Ftd%3E%0A%20%20%20%20%3C%2Ftr%3E%0A%20%20%3C%2Ftbody%3E%0A%3C%2Ftable%3E" download="tabla-1.xml" class="table-download-btn" title="Descargar como XML">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-          <span>XML</span>
-        </a>
-      </div>
-    </div>
-    <div class="table-wrapper">
-      <table id="table-1" class="article-table">
+      <div class="table-download-wrapper" id="table-1-wrapper">
+        <div class="table-header">
+          <span class="table-label">Tabla 1</span>
+          <div class="table-download-buttons">
+            <a href="data:text/csv;charset=utf-8,%EF%BB%BF%22Funci%C3%B3n%20y%22%2C%22Fluxi%C3%B3n%20dy%2Fdx%22%0A%22xn%22%2C%22n%20xn-1%22%0A%22sin(x)%22%2C%22cos(x)%22%0A%22cos(x)%22%2C%22-sin(x)%22%0A%22ex%22%2C%22ex%22%0A%22ln(x)%22%2C%221%2Fx%22" download="tabla-1.csv" class="table-download-btn" title="Descargar como CSV">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12h6"/><path d="M9 16h6"/><path d="M9 8h3"/><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+              <span>CSV</span>
+            </a>
+            <a href="data:application/vnd.ms-excel;charset=utf-8,%EF%BB%BF%3Ctable%3E%3Cthead%3E%3Ctr%3E%3Cth%3EFunci%C3%B3n%20y%3C%2Fth%3E%3Cth%3EFluxi%C3%B3n%20dy%2Fdx%3C%2Fth%3E%3C%2Ftr%3E%3C%2Fthead%3E%3Ctbody%3E%3Ctr%3E%3Ctd%3Exn%3C%2Ftd%3E%3Ctd%3En%20xn-1%3C%2Ftd%3E%3C%2Ftr%3E%3Ctr%3E%3Ctd%3Esin(x)%3C%2Ftd%3E%3Ctd%3Ecos(x)%3C%2Ftd%3E%3C%2Ftr%3E%3Ctr%3E%3Ctd%3Ecos(x)%3C%2Ftd%3E%3Ctd%3E-sin(x)%3C%2Ftd%3E%3C%2Ftr%3E%3Ctr%3E%3Ctd%3Eex%3C%2Ftd%3E%3Ctd%3Eex%3C%2Ftd%3E%3C%2Ftr%3E%3Ctr%3E%3Ctd%3Eln(x)%3C%2Ftd%3E%3Ctd%3E1%2Fx%3C%2Ftd%3E%3C%2Ftr%3E%3C%2Ftbody%3E%3C%2Ftable%3E" download="tabla-1.xls" class="table-download-btn" title="Descargar como Excel">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
+              <span>Excel</span>
+            </a>
+            <a href="data:application/json;charset=utf-8,%7B%0A%20%20%22number%22%3A%201%2C%0A%20%20%22caption%22%3A%20%22%22%2C%0A%20%20%22headers%22%3A%20%5B%0A%20%20%20%20%22Funci%C3%B3n%20y%22%2C%0A%20%20%20%20%22Fluxi%C3%B3n%20dy%2Fdx%22%0A%20%20%5D%2C%0A%20%20%22rows%22%3A%20%5B%0A%20%20%20%20%5B%0A%20%20%20%20%20%20%22xn%22%2C%0A%20%20%20%20%20%20%22n%20xn-1%22%0A%20%20%20%20%5D%2C%0A%20%20%20%20%5B%0A%20%20%20%20%20%20%22sin(x)%22%2C%0A%20%20%20%20%20%20%22cos(x)%22%0A%20%20%20%20%5D%2C%0A%20%20%20%20%5B%0A%20%20%20%20%20%20%22cos(x)%22%2C%0A%20%20%20%20%20%20%22-sin(x)%22%0A%20%20%20%20%5D%2C%0A%20%20%20%20%5B%0A%20%20%20%20%20%20%22ex%22%2C%0A%20%20%20%20%20%20%22ex%22%0A%20%20%20%20%5D%2C%0A%20%20%20%20%5B%0A%20%20%20%20%20%20%22ln(x)%22%2C%0A%20%20%20%20%20%20%221%2Fx%22%0A%20%20%20%20%5D%0A%20%20%5D%2C%0A%20%20%22data%22%3A%20%5B%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22funcin_y%22%3A%20%22xn%22%2C%0A%20%20%20%20%20%20%22fluxin_dydx%22%3A%20%22n%20xn-1%22%0A%20%20%20%20%7D%2C%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22funcin_y%22%3A%20%22sin(x)%22%2C%0A%20%20%20%20%20%20%22fluxin_dydx%22%3A%20%22cos(x)%22%0A%20%20%20%20%7D%2C%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22funcin_y%22%3A%20%22cos(x)%22%2C%0A%20%20%20%20%20%20%22fluxin_dydx%22%3A%20%22-sin(x)%22%0A%20%20%20%20%7D%2C%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22funcin_y%22%3A%20%22ex%22%2C%0A%20%20%20%20%20%20%22fluxin_dydx%22%3A%20%22ex%22%0A%20%20%20%20%7D%2C%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22funcin_y%22%3A%20%22ln(x)%22%2C%0A%20%20%20%20%20%20%22fluxin_dydx%22%3A%20%221%2Fx%22%0A%20%20%20%20%7D%0A%20%20%5D%0A%7D" download="tabla-1.json" class="table-download-btn" title="Descargar como JSON">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 20c-1.5 0-2.5-1-2.5-2.5v-3.5c0-1-1-1.5-2-1.5s-2-.5-2-1.5v-1c0-1 1-1.5 2-1.5s2-.5 2-1.5v-3.5c0-1.5 1-2.5 2.5-2.5"/><path d="M14 4c1.5 0 2.5 1 2.5 2.5v3.5c0 1 1 1.5 2 1.5s2 .5 2 1.5v1c0 1-1 1.5-2 1.5s-2 .5-2 1.5v3.5c0 1.5-1 2.5-2.5 2.5"/></svg>
+              <span>JSON</span>
+            </a>
+            <a href="data:text/plain;charset=utf-8,%5Cbegin%7Btable%7D%5Bh%5D%0A%5Ccentering%0A%5Clabel%7Btab%3A1%7D%0A%5Cbegin%7Btabular%7D%7B%7Cl%7Cl%7C%7D%0A%5Chline%0AFunci%C3%B3n%20y%20%26%20Fluxi%C3%B3n%20dy%2Fdx%20%5C%5C%0A%5Chline%0Axn%20%26%20n%20xn-1%20%5C%5C%0A%5Chline%0Asin(x)%20%26%20cos(x)%20%5C%5C%0A%5Chline%0Acos(x)%20%26%20-sin(x)%20%5C%5C%0A%5Chline%0Aex%20%26%20ex%20%5C%5C%0A%5Chline%0Aln(x)%20%26%201%2Fx%20%5C%5C%0A%5Chline%0A%5Cend%7Btabular%7D%0A%5Cend%7Btable%7D" download="tabla-1.tex" class="table-download-btn" title="Descargar como LaTeX">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 4h-12l7 8-7 8h12"/></svg>
+              <span>LaTeX</span>
+            </a>
+            <a href="data:application/xml;charset=utf-8,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%0A%3Ctable%20id%3D%22table-1%22%20number%3D%221%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2Fxhtml%22%3E%0A%20%20%3Cthead%3E%0A%20%20%20%20%3Ctr%3E%0A%20%20%20%20%20%20%3Cth%3EFunci%C3%B3n%20y%3C%2Fth%3E%0A%20%20%20%20%20%20%3Cth%3EFluxi%C3%B3n%20dy%2Fdx%3C%2Fth%3E%0A%20%20%20%20%3C%2Ftr%3E%0A%20%20%3C%2Fthead%3E%0A%20%20%3Ctbody%3E%0A%20%20%20%20%3Ctr%3E%0A%20%20%20%20%20%20%3Ctd%3Exn%3C%2Ftd%3E%0A%20%20%20%20%20%20%3Ctd%3En%20xn-1%3C%2Ftd%3E%0A%20%20%20%20%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%0A%20%20%20%20%20%20%3Ctd%3Esin(x)%3C%2Ftd%3E%0A%20%20%20%20%20%20%3Ctd%3Ecos(x)%3C%2Ftd%3E%0A%20%20%20%20%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%0A%20%20%20%20%20%20%3Ctd%3Ecos(x)%3C%2Ftd%3E%0A%20%20%20%20%20%20%3Ctd%3E-sin(x)%3C%2Ftd%3E%0A%20%20%20%20%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%0A%20%20%20%20%20%20%3Ctd%3Eex%3C%2Ftd%3E%0A%20%20%20%20%20%20%3Ctd%3Eex%3C%2Ftd%3E%0A%20%20%20%20%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%0A%20%20%20%20%20%20%3Ctd%3Eln(x)%3C%2Ftd%3E%0A%20%20%20%20%20%20%3Ctd%3E1%2Fx%3C%2Ftd%3E%0A%20%20%20%20%3C%2Ftr%3E%0A%20%20%3C%2Ftbody%3E%0A%3C%2Ftable%3E" download="tabla-1.xml" class="table-download-btn" title="Descargar como XML">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+              <span>XML</span>
+            </a>
+          </div>
+        </div>
+        <div class="table-wrapper">
+          <table id="table-1" class="article-table">
   <thead>
     <tr>
       <th>Función <em>y</em></th>
@@ -2982,48 +3323,16 @@ while t </code></pre>
     </tr>
   </thead>
   <tbody>
-    <tr><td><em>x
-      <a href="#note-1" class="footnote-link" id="note-ref-1">
-        <sup>[1]</sup>
-      </a>
-      <span class="footnote-content" id="note-1">
-        n
-        <a href="#note-ref-1" class="footnote-back">↩</a>
-      </span>
-    </em></td><td><em>n x
-      <a href="#note-2" class="footnote-link" id="note-ref-2">
-        <sup>[2]</sup>
-      </a>
-      <span class="footnote-content" id="note-2">
-        n-1
-        <a href="#note-ref-2" class="footnote-back">↩</a>
-      </span>
-    </em></td></tr>
+    <tr><td><em>x<sup>n</sup></em></td><td><em>n x<sup>n-1</sup></em></td></tr>
     <tr><td><em>sin(x)</em></td><td><em>cos(x)</em></td></tr>
     <tr><td><em>cos(x)</em></td><td><em>-sin(x)</em></td></tr>
-    <tr><td><em>e
-      <a href="#note-3" class="footnote-link" id="note-ref-3">
-        <sup>[3]</sup>
-      </a>
-      <span class="footnote-content" id="note-3">
-        x
-        <a href="#note-ref-3" class="footnote-back">↩</a>
-      </span>
-    </em></td><td><em>e
-      <a href="#note-4" class="footnote-link" id="note-ref-4">
-        <sup>[4]</sup>
-      </a>
-      <span class="footnote-content" id="note-4">
-        x
-        <a href="#note-ref-4" class="footnote-back">↩</a>
-      </span>
-    </em></td></tr>
+    <tr><td><em>e<sup>x</sup></em></td><td><em>e<sup>x</sup></em></td></tr>
     <tr><td><em>ln(x)</em></td><td><em>1/x</em></td></tr>
   </tbody>
 </table>
-    </div>
-  </div>
-
+        </div>
+      </div>
+    
 
 <h2 id="main-conclusion">Conclusión</h2>
 
@@ -3089,34 +3398,34 @@ while t </code></pre>
           <h3 id="appendix-apendice-a-cronologia-de-las-obras-principales-de-euler">Apéndice A: Cronología de las obras principales de Euler</h3>
 
 
-  <div class="table-download-wrapper" id="table-2-wrapper">
-    <div class="table-header">
-      <span class="table-label">Tabla 2</span>
-      <div class="table-download-buttons">
-        <a href="data:text/csv;charset=utf-8,%EF%BB%BF%22A%C3%B1o%22%2C%22Obra%22%2C%22Campo%22%0A%221736%22%2C%22Mechanica%22%2C%22Mec%C3%A1nica%20anal%C3%ADtica%22%0A%221740%22%2C%22Tentamen%20novae%20theoriae%20musicae%22%2C%22Ac%C3%BAstica%20%2F%20M%C3%BAsica%22%0A%221744%22%2C%22Methodus%20inveniendi%20lineas%20curvas%22%2C%22C%C3%A1lculo%20de%20variaciones%22%0A%221748%22%2C%22Introductio%20in%20analysin%20infinitorum%22%2C%22An%C3%A1lisis%20matem%C3%A1tico%22%0A%221755%22%2C%22Institutiones%20calculi%20differentialis%22%2C%22C%C3%A1lculo%20diferencial%22%0A%221768-70%22%2C%22Lettres%20%C3%A0%20une%20princesse%20d'Allemagne%22%2C%22Divulgaci%C3%B3n%20cient%C3%ADfica%22" download="tabla-2.csv" class="table-download-btn" title="Descargar como CSV">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12h6"/><path d="M9 16h6"/><path d="M9 8h3"/><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
-          <span>CSV</span>
-        </a>
-        <a href="data:application/vnd.ms-excel;charset=utf-8,%EF%BB%BF%3Ctable%3E%3Cthead%3E%3Ctr%3E%3Cth%3EA%C3%B1o%3C%2Fth%3E%3Cth%3EObra%3C%2Fth%3E%3Cth%3ECampo%3C%2Fth%3E%3C%2Ftr%3E%3C%2Fthead%3E%3Ctbody%3E%3Ctr%3E%3Ctd%3E1736%3C%2Ftd%3E%3Ctd%3EMechanica%3C%2Ftd%3E%3Ctd%3EMec%C3%A1nica%20anal%C3%ADtica%3C%2Ftd%3E%3C%2Ftr%3E%3Ctr%3E%3Ctd%3E1740%3C%2Ftd%3E%3Ctd%3ETentamen%20novae%20theoriae%20musicae%3C%2Ftd%3E%3Ctd%3EAc%C3%BAstica%20%2F%20M%C3%BAsica%3C%2Ftd%3E%3C%2Ftr%3E%3Ctr%3E%3Ctd%3E1744%3C%2Ftd%3E%3Ctd%3EMethodus%20inveniendi%20lineas%20curvas%3C%2Ftd%3E%3Ctd%3EC%C3%A1lculo%20de%20variaciones%3C%2Ftd%3E%3C%2Ftr%3E%3Ctr%3E%3Ctd%3E1748%3C%2Ftd%3E%3Ctd%3EIntroductio%20in%20analysin%20infinitorum%3C%2Ftd%3E%3Ctd%3EAn%C3%A1lisis%20matem%C3%A1tico%3C%2Ftd%3E%3C%2Ftr%3E%3Ctr%3E%3Ctd%3E1755%3C%2Ftd%3E%3Ctd%3EInstitutiones%20calculi%20differentialis%3C%2Ftd%3E%3Ctd%3EC%C3%A1lculo%20diferencial%3C%2Ftd%3E%3C%2Ftr%3E%3Ctr%3E%3Ctd%3E1768-70%3C%2Ftd%3E%3Ctd%3ELettres%20%C3%A0%20une%20princesse%20d'Allemagne%3C%2Ftd%3E%3Ctd%3EDivulgaci%C3%B3n%20cient%C3%ADfica%3C%2Ftd%3E%3C%2Ftr%3E%3C%2Ftbody%3E%3C%2Ftable%3E" download="tabla-2.xls" class="table-download-btn" title="Descargar como Excel">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
-          <span>Excel</span>
-        </a>
-        <a href="data:application/json;charset=utf-8,%7B%0A%20%20%22number%22%3A%202%2C%0A%20%20%22caption%22%3A%20null%2C%0A%20%20%22headers%22%3A%20%5B%0A%20%20%20%20%22A%C3%B1o%22%2C%0A%20%20%20%20%22Obra%22%2C%0A%20%20%20%20%22Campo%22%0A%20%20%5D%2C%0A%20%20%22rows%22%3A%20%5B%0A%20%20%20%20%5B%0A%20%20%20%20%20%20%221736%22%2C%0A%20%20%20%20%20%20%22Mechanica%22%2C%0A%20%20%20%20%20%20%22Mec%C3%A1nica%20anal%C3%ADtica%22%0A%20%20%20%20%5D%2C%0A%20%20%20%20%5B%0A%20%20%20%20%20%20%221740%22%2C%0A%20%20%20%20%20%20%22Tentamen%20novae%20theoriae%20musicae%22%2C%0A%20%20%20%20%20%20%22Ac%C3%BAstica%20%2F%20M%C3%BAsica%22%0A%20%20%20%20%5D%2C%0A%20%20%20%20%5B%0A%20%20%20%20%20%20%221744%22%2C%0A%20%20%20%20%20%20%22Methodus%20inveniendi%20lineas%20curvas%22%2C%0A%20%20%20%20%20%20%22C%C3%A1lculo%20de%20variaciones%22%0A%20%20%20%20%5D%2C%0A%20%20%20%20%5B%0A%20%20%20%20%20%20%221748%22%2C%0A%20%20%20%20%20%20%22Introductio%20in%20analysin%20infinitorum%22%2C%0A%20%20%20%20%20%20%22An%C3%A1lisis%20matem%C3%A1tico%22%0A%20%20%20%20%5D%2C%0A%20%20%20%20%5B%0A%20%20%20%20%20%20%221755%22%2C%0A%20%20%20%20%20%20%22Institutiones%20calculi%20differentialis%22%2C%0A%20%20%20%20%20%20%22C%C3%A1lculo%20diferencial%22%0A%20%20%20%20%5D%2C%0A%20%20%20%20%5B%0A%20%20%20%20%20%20%221768-70%22%2C%0A%20%20%20%20%20%20%22Lettres%20%C3%A0%20une%20princesse%20d'Allemagne%22%2C%0A%20%20%20%20%20%20%22Divulgaci%C3%B3n%20cient%C3%ADfica%22%0A%20%20%20%20%5D%0A%20%20%5D%2C%0A%20%20%22data%22%3A%20%5B%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22ao%22%3A%20%221736%22%2C%0A%20%20%20%20%20%20%22obra%22%3A%20%22Mechanica%22%2C%0A%20%20%20%20%20%20%22campo%22%3A%20%22Mec%C3%A1nica%20anal%C3%ADtica%22%0A%20%20%20%20%7D%2C%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22ao%22%3A%20%221740%22%2C%0A%20%20%20%20%20%20%22obra%22%3A%20%22Tentamen%20novae%20theoriae%20musicae%22%2C%0A%20%20%20%20%20%20%22campo%22%3A%20%22Ac%C3%BAstica%20%2F%20M%C3%BAsica%22%0A%20%20%20%20%7D%2C%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22ao%22%3A%20%221744%22%2C%0A%20%20%20%20%20%20%22obra%22%3A%20%22Methodus%20inveniendi%20lineas%20curvas%22%2C%0A%20%20%20%20%20%20%22campo%22%3A%20%22C%C3%A1lculo%20de%20variaciones%22%0A%20%20%20%20%7D%2C%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22ao%22%3A%20%221748%22%2C%0A%20%20%20%20%20%20%22obra%22%3A%20%22Introductio%20in%20analysin%20infinitorum%22%2C%0A%20%20%20%20%20%20%22campo%22%3A%20%22An%C3%A1lisis%20matem%C3%A1tico%22%0A%20%20%20%20%7D%2C%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22ao%22%3A%20%221755%22%2C%0A%20%20%20%20%20%20%22obra%22%3A%20%22Institutiones%20calculi%20differentialis%22%2C%0A%20%20%20%20%20%20%22campo%22%3A%20%22C%C3%A1lculo%20diferencial%22%0A%20%20%20%20%7D%2C%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22ao%22%3A%20%221768-70%22%2C%0A%20%20%20%20%20%20%22obra%22%3A%20%22Lettres%20%C3%A0%20une%20princesse%20d'Allemagne%22%2C%0A%20%20%20%20%20%20%22campo%22%3A%20%22Divulgaci%C3%B3n%20cient%C3%ADfica%22%0A%20%20%20%20%7D%0A%20%20%5D%0A%7D" download="tabla-2.json" class="table-download-btn" title="Descargar como JSON">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 20c-1.5 0-2.5-1-2.5-2.5v-3.5c0-1-1-1.5-2-1.5s-2-.5-2-1.5v-1c0-1 1-1.5 2-1.5s2-.5 2-1.5v-3.5c0-1.5 1-2.5 2.5-2.5"/><path d="M14 4c1.5 0 2.5 1 2.5 2.5v3.5c0 1 1 1.5 2 1.5s2 .5 2 1.5v1c0 1-1 1.5-2 1.5s-2 .5-2 1.5v3.5c0 1.5-1 2.5-2.5 2.5"/></svg>
-          <span>JSON</span>
-        </a>
-        <a href="data:text/plain;charset=utf-8,%5Cbegin%7Btable%7D%5Bh%5D%0A%5Ccentering%0A%5Clabel%7Btab%3A2%7D%0A%5Cbegin%7Btabular%7D%7B%7Cl%7Cl%7Cl%7C%7D%0A%5Chline%0AA%C3%B1o%20%26%20Obra%20%26%20Campo%20%5C%5C%0A%5Chline%0A1736%20%26%20Mechanica%20%26%20Mec%C3%A1nica%20anal%C3%ADtica%20%5C%5C%0A%5Chline%0A1740%20%26%20Tentamen%20novae%20theoriae%20musicae%20%26%20Ac%C3%BAstica%20%2F%20M%C3%BAsica%20%5C%5C%0A%5Chline%0A1744%20%26%20Methodus%20inveniendi%20lineas%20curvas%20%26%20C%C3%A1lculo%20de%20variaciones%20%5C%5C%0A%5Chline%0A1748%20%26%20Introductio%20in%20analysin%20infinitorum%20%26%20An%C3%A1lisis%20matem%C3%A1tico%20%5C%5C%0A%5Chline%0A1755%20%26%20Institutiones%20calculi%20differentialis%20%26%20C%C3%A1lculo%20diferencial%20%5C%5C%0A%5Chline%0A1768-70%20%26%20Lettres%20%C3%A0%20une%20princesse%20d'Allemagne%20%26%20Divulgaci%C3%B3n%20cient%C3%ADfica%20%5C%5C%0A%5Chline%0A%5Cend%7Btabular%7D%0A%5Cend%7Btable%7D" download="tabla-2.tex" class="table-download-btn" title="Descargar como LaTeX">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 4h-12l7 8-7 8h12"/></svg>
-          <span>LaTeX</span>
-        </a>
-        <a href="data:application/xml;charset=utf-8,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%0A%3Ctable%20id%3D%22table-2%22%20number%3D%222%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2Fxhtml%22%3E%0A%20%20%3Cthead%3E%0A%20%20%20%20%3Ctr%3E%0A%20%20%20%20%20%20%3Cth%3EA%C3%B1o%3C%2Fth%3E%0A%20%20%20%20%20%20%3Cth%3EObra%3C%2Fth%3E%0A%20%20%20%20%20%20%3Cth%3ECampo%3C%2Fth%3E%0A%20%20%20%20%3C%2Ftr%3E%0A%20%20%3C%2Fthead%3E%0A%20%20%3Ctbody%3E%0A%20%20%20%20%3Ctr%3E%0A%20%20%20%20%20%20%3Ctd%3E1736%3C%2Ftd%3E%0A%20%20%20%20%20%20%3Ctd%3EMechanica%3C%2Ftd%3E%0A%20%20%20%20%20%20%3Ctd%3EMec%C3%A1nica%20anal%C3%ADtica%3C%2Ftd%3E%0A%20%20%20%20%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%0A%20%20%20%20%20%20%3Ctd%3E1740%3C%2Ftd%3E%0A%20%20%20%20%20%20%3Ctd%3ETentamen%20novae%20theoriae%20musicae%3C%2Ftd%3E%0A%20%20%20%20%20%20%3Ctd%3EAc%C3%BAstica%20%2F%20M%C3%BAsica%3C%2Ftd%3E%0A%20%20%20%20%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%0A%20%20%20%20%20%20%3Ctd%3E1744%3C%2Ftd%3E%0A%20%20%20%20%20%20%3Ctd%3EMethodus%20inveniendi%20lineas%20curvas%3C%2Ftd%3E%0A%20%20%20%20%20%20%3Ctd%3EC%C3%A1lculo%20de%20variaciones%3C%2Ftd%3E%0A%20%20%20%20%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%0A%20%20%20%20%20%20%3Ctd%3E1748%3C%2Ftd%3E%0A%20%20%20%20%20%20%3Ctd%3EIntroductio%20in%20analysin%20infinitorum%3C%2Ftd%3E%0A%20%20%20%20%20%20%3Ctd%3EAn%C3%A1lisis%20matem%C3%A1tico%3C%2Ftd%3E%0A%20%20%20%20%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%0A%20%20%20%20%20%20%3Ctd%3E1755%3C%2Ftd%3E%0A%20%20%20%20%20%20%3Ctd%3EInstitutiones%20calculi%20differentialis%3C%2Ftd%3E%0A%20%20%20%20%20%20%3Ctd%3EC%C3%A1lculo%20diferencial%3C%2Ftd%3E%0A%20%20%20%20%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%0A%20%20%20%20%20%20%3Ctd%3E1768-70%3C%2Ftd%3E%0A%20%20%20%20%20%20%3Ctd%3ELettres%20%C3%A0%20une%20princesse%20d%26apos%3BAllemagne%3C%2Ftd%3E%0A%20%20%20%20%20%20%3Ctd%3EDivulgaci%C3%B3n%20cient%C3%ADfica%3C%2Ftd%3E%0A%20%20%20%20%3C%2Ftr%3E%0A%20%20%3C%2Ftbody%3E%0A%3C%2Ftable%3E" download="tabla-2.xml" class="table-download-btn" title="Descargar como XML">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-          <span>XML</span>
-        </a>
-      </div>
-    </div>
-    <div class="table-wrapper">
-      <table style="width:100%; border-collapse: collapse; margin:20px 0; border:1px solid #ddd;" id="table-2" class="article-table">
+      <div class="table-download-wrapper" id="table-2-wrapper">
+        <div class="table-header">
+          <span class="table-label">Tabla 2</span>
+          <div class="table-download-buttons">
+            <a href="data:text/csv;charset=utf-8,%EF%BB%BF%22A%C3%B1o%22%2C%22Obra%22%2C%22Campo%22%0A%221736%22%2C%22Mechanica%22%2C%22Mec%C3%A1nica%20anal%C3%ADtica%22%0A%221740%22%2C%22Tentamen%20novae%20theoriae%20musicae%22%2C%22Ac%C3%BAstica%20%2F%20M%C3%BAsica%22%0A%221744%22%2C%22Methodus%20inveniendi%20lineas%20curvas%22%2C%22C%C3%A1lculo%20de%20variaciones%22%0A%221748%22%2C%22Introductio%20in%20analysin%20infinitorum%22%2C%22An%C3%A1lisis%20matem%C3%A1tico%22%0A%221755%22%2C%22Institutiones%20calculi%20differentialis%22%2C%22C%C3%A1lculo%20diferencial%22%0A%221768-70%22%2C%22Lettres%20%C3%A0%20une%20princesse%20d'Allemagne%22%2C%22Divulgaci%C3%B3n%20cient%C3%ADfica%22" download="tabla-2.csv" class="table-download-btn" title="Descargar como CSV">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12h6"/><path d="M9 16h6"/><path d="M9 8h3"/><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+              <span>CSV</span>
+            </a>
+            <a href="data:application/vnd.ms-excel;charset=utf-8,%EF%BB%BF%3Ctable%3E%3Cthead%3E%3Ctr%3E%3Cth%3EA%C3%B1o%3C%2Fth%3E%3Cth%3EObra%3C%2Fth%3E%3Cth%3ECampo%3C%2Fth%3E%3C%2Ftr%3E%3C%2Fthead%3E%3Ctbody%3E%3Ctr%3E%3Ctd%3E1736%3C%2Ftd%3E%3Ctd%3EMechanica%3C%2Ftd%3E%3Ctd%3EMec%C3%A1nica%20anal%C3%ADtica%3C%2Ftd%3E%3C%2Ftr%3E%3Ctr%3E%3Ctd%3E1740%3C%2Ftd%3E%3Ctd%3ETentamen%20novae%20theoriae%20musicae%3C%2Ftd%3E%3Ctd%3EAc%C3%BAstica%20%2F%20M%C3%BAsica%3C%2Ftd%3E%3C%2Ftr%3E%3Ctr%3E%3Ctd%3E1744%3C%2Ftd%3E%3Ctd%3EMethodus%20inveniendi%20lineas%20curvas%3C%2Ftd%3E%3Ctd%3EC%C3%A1lculo%20de%20variaciones%3C%2Ftd%3E%3C%2Ftr%3E%3Ctr%3E%3Ctd%3E1748%3C%2Ftd%3E%3Ctd%3EIntroductio%20in%20analysin%20infinitorum%3C%2Ftd%3E%3Ctd%3EAn%C3%A1lisis%20matem%C3%A1tico%3C%2Ftd%3E%3C%2Ftr%3E%3Ctr%3E%3Ctd%3E1755%3C%2Ftd%3E%3Ctd%3EInstitutiones%20calculi%20differentialis%3C%2Ftd%3E%3Ctd%3EC%C3%A1lculo%20diferencial%3C%2Ftd%3E%3C%2Ftr%3E%3Ctr%3E%3Ctd%3E1768-70%3C%2Ftd%3E%3Ctd%3ELettres%20%C3%A0%20une%20princesse%20d'Allemagne%3C%2Ftd%3E%3Ctd%3EDivulgaci%C3%B3n%20cient%C3%ADfica%3C%2Ftd%3E%3C%2Ftr%3E%3C%2Ftbody%3E%3C%2Ftable%3E" download="tabla-2.xls" class="table-download-btn" title="Descargar como Excel">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
+              <span>Excel</span>
+            </a>
+            <a href="data:application/json;charset=utf-8,%7B%0A%20%20%22number%22%3A%202%2C%0A%20%20%22caption%22%3A%20%22%22%2C%0A%20%20%22headers%22%3A%20%5B%0A%20%20%20%20%22A%C3%B1o%22%2C%0A%20%20%20%20%22Obra%22%2C%0A%20%20%20%20%22Campo%22%0A%20%20%5D%2C%0A%20%20%22rows%22%3A%20%5B%0A%20%20%20%20%5B%0A%20%20%20%20%20%20%221736%22%2C%0A%20%20%20%20%20%20%22Mechanica%22%2C%0A%20%20%20%20%20%20%22Mec%C3%A1nica%20anal%C3%ADtica%22%0A%20%20%20%20%5D%2C%0A%20%20%20%20%5B%0A%20%20%20%20%20%20%221740%22%2C%0A%20%20%20%20%20%20%22Tentamen%20novae%20theoriae%20musicae%22%2C%0A%20%20%20%20%20%20%22Ac%C3%BAstica%20%2F%20M%C3%BAsica%22%0A%20%20%20%20%5D%2C%0A%20%20%20%20%5B%0A%20%20%20%20%20%20%221744%22%2C%0A%20%20%20%20%20%20%22Methodus%20inveniendi%20lineas%20curvas%22%2C%0A%20%20%20%20%20%20%22C%C3%A1lculo%20de%20variaciones%22%0A%20%20%20%20%5D%2C%0A%20%20%20%20%5B%0A%20%20%20%20%20%20%221748%22%2C%0A%20%20%20%20%20%20%22Introductio%20in%20analysin%20infinitorum%22%2C%0A%20%20%20%20%20%20%22An%C3%A1lisis%20matem%C3%A1tico%22%0A%20%20%20%20%5D%2C%0A%20%20%20%20%5B%0A%20%20%20%20%20%20%221755%22%2C%0A%20%20%20%20%20%20%22Institutiones%20calculi%20differentialis%22%2C%0A%20%20%20%20%20%20%22C%C3%A1lculo%20diferencial%22%0A%20%20%20%20%5D%2C%0A%20%20%20%20%5B%0A%20%20%20%20%20%20%221768-70%22%2C%0A%20%20%20%20%20%20%22Lettres%20%C3%A0%20une%20princesse%20d'Allemagne%22%2C%0A%20%20%20%20%20%20%22Divulgaci%C3%B3n%20cient%C3%ADfica%22%0A%20%20%20%20%5D%0A%20%20%5D%2C%0A%20%20%22data%22%3A%20%5B%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22ao%22%3A%20%221736%22%2C%0A%20%20%20%20%20%20%22obra%22%3A%20%22Mechanica%22%2C%0A%20%20%20%20%20%20%22campo%22%3A%20%22Mec%C3%A1nica%20anal%C3%ADtica%22%0A%20%20%20%20%7D%2C%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22ao%22%3A%20%221740%22%2C%0A%20%20%20%20%20%20%22obra%22%3A%20%22Tentamen%20novae%20theoriae%20musicae%22%2C%0A%20%20%20%20%20%20%22campo%22%3A%20%22Ac%C3%BAstica%20%2F%20M%C3%BAsica%22%0A%20%20%20%20%7D%2C%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22ao%22%3A%20%221744%22%2C%0A%20%20%20%20%20%20%22obra%22%3A%20%22Methodus%20inveniendi%20lineas%20curvas%22%2C%0A%20%20%20%20%20%20%22campo%22%3A%20%22C%C3%A1lculo%20de%20variaciones%22%0A%20%20%20%20%7D%2C%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22ao%22%3A%20%221748%22%2C%0A%20%20%20%20%20%20%22obra%22%3A%20%22Introductio%20in%20analysin%20infinitorum%22%2C%0A%20%20%20%20%20%20%22campo%22%3A%20%22An%C3%A1lisis%20matem%C3%A1tico%22%0A%20%20%20%20%7D%2C%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22ao%22%3A%20%221755%22%2C%0A%20%20%20%20%20%20%22obra%22%3A%20%22Institutiones%20calculi%20differentialis%22%2C%0A%20%20%20%20%20%20%22campo%22%3A%20%22C%C3%A1lculo%20diferencial%22%0A%20%20%20%20%7D%2C%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22ao%22%3A%20%221768-70%22%2C%0A%20%20%20%20%20%20%22obra%22%3A%20%22Lettres%20%C3%A0%20une%20princesse%20d'Allemagne%22%2C%0A%20%20%20%20%20%20%22campo%22%3A%20%22Divulgaci%C3%B3n%20cient%C3%ADfica%22%0A%20%20%20%20%7D%0A%20%20%5D%0A%7D" download="tabla-2.json" class="table-download-btn" title="Descargar como JSON">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 20c-1.5 0-2.5-1-2.5-2.5v-3.5c0-1-1-1.5-2-1.5s-2-.5-2-1.5v-1c0-1 1-1.5 2-1.5s2-.5 2-1.5v-3.5c0-1.5 1-2.5 2.5-2.5"/><path d="M14 4c1.5 0 2.5 1 2.5 2.5v3.5c0 1 1 1.5 2 1.5s2 .5 2 1.5v1c0 1-1 1.5-2 1.5s-2 .5-2 1.5v3.5c0 1.5-1 2.5-2.5 2.5"/></svg>
+              <span>JSON</span>
+            </a>
+            <a href="data:text/plain;charset=utf-8,%5Cbegin%7Btable%7D%5Bh%5D%0A%5Ccentering%0A%5Clabel%7Btab%3A2%7D%0A%5Cbegin%7Btabular%7D%7B%7Cl%7Cl%7Cl%7C%7D%0A%5Chline%0AA%C3%B1o%20%26%20Obra%20%26%20Campo%20%5C%5C%0A%5Chline%0A1736%20%26%20Mechanica%20%26%20Mec%C3%A1nica%20anal%C3%ADtica%20%5C%5C%0A%5Chline%0A1740%20%26%20Tentamen%20novae%20theoriae%20musicae%20%26%20Ac%C3%BAstica%20%2F%20M%C3%BAsica%20%5C%5C%0A%5Chline%0A1744%20%26%20Methodus%20inveniendi%20lineas%20curvas%20%26%20C%C3%A1lculo%20de%20variaciones%20%5C%5C%0A%5Chline%0A1748%20%26%20Introductio%20in%20analysin%20infinitorum%20%26%20An%C3%A1lisis%20matem%C3%A1tico%20%5C%5C%0A%5Chline%0A1755%20%26%20Institutiones%20calculi%20differentialis%20%26%20C%C3%A1lculo%20diferencial%20%5C%5C%0A%5Chline%0A1768-70%20%26%20Lettres%20%C3%A0%20une%20princesse%20d'Allemagne%20%26%20Divulgaci%C3%B3n%20cient%C3%ADfica%20%5C%5C%0A%5Chline%0A%5Cend%7Btabular%7D%0A%5Cend%7Btable%7D" download="tabla-2.tex" class="table-download-btn" title="Descargar como LaTeX">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 4h-12l7 8-7 8h12"/></svg>
+              <span>LaTeX</span>
+            </a>
+            <a href="data:application/xml;charset=utf-8,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%0A%3Ctable%20id%3D%22table-2%22%20number%3D%222%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2Fxhtml%22%3E%0A%20%20%3Cthead%3E%0A%20%20%20%20%3Ctr%3E%0A%20%20%20%20%20%20%3Cth%3EA%C3%B1o%3C%2Fth%3E%0A%20%20%20%20%20%20%3Cth%3EObra%3C%2Fth%3E%0A%20%20%20%20%20%20%3Cth%3ECampo%3C%2Fth%3E%0A%20%20%20%20%3C%2Ftr%3E%0A%20%20%3C%2Fthead%3E%0A%20%20%3Ctbody%3E%0A%20%20%20%20%3Ctr%3E%0A%20%20%20%20%20%20%3Ctd%3E1736%3C%2Ftd%3E%0A%20%20%20%20%20%20%3Ctd%3EMechanica%3C%2Ftd%3E%0A%20%20%20%20%20%20%3Ctd%3EMec%C3%A1nica%20anal%C3%ADtica%3C%2Ftd%3E%0A%20%20%20%20%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%0A%20%20%20%20%20%20%3Ctd%3E1740%3C%2Ftd%3E%0A%20%20%20%20%20%20%3Ctd%3ETentamen%20novae%20theoriae%20musicae%3C%2Ftd%3E%0A%20%20%20%20%20%20%3Ctd%3EAc%C3%BAstica%20%2F%20M%C3%BAsica%3C%2Ftd%3E%0A%20%20%20%20%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%0A%20%20%20%20%20%20%3Ctd%3E1744%3C%2Ftd%3E%0A%20%20%20%20%20%20%3Ctd%3EMethodus%20inveniendi%20lineas%20curvas%3C%2Ftd%3E%0A%20%20%20%20%20%20%3Ctd%3EC%C3%A1lculo%20de%20variaciones%3C%2Ftd%3E%0A%20%20%20%20%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%0A%20%20%20%20%20%20%3Ctd%3E1748%3C%2Ftd%3E%0A%20%20%20%20%20%20%3Ctd%3EIntroductio%20in%20analysin%20infinitorum%3C%2Ftd%3E%0A%20%20%20%20%20%20%3Ctd%3EAn%C3%A1lisis%20matem%C3%A1tico%3C%2Ftd%3E%0A%20%20%20%20%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%0A%20%20%20%20%20%20%3Ctd%3E1755%3C%2Ftd%3E%0A%20%20%20%20%20%20%3Ctd%3EInstitutiones%20calculi%20differentialis%3C%2Ftd%3E%0A%20%20%20%20%20%20%3Ctd%3EC%C3%A1lculo%20diferencial%3C%2Ftd%3E%0A%20%20%20%20%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%0A%20%20%20%20%20%20%3Ctd%3E1768-70%3C%2Ftd%3E%0A%20%20%20%20%20%20%3Ctd%3ELettres%20%C3%A0%20une%20princesse%20d%26apos%3BAllemagne%3C%2Ftd%3E%0A%20%20%20%20%20%20%3Ctd%3EDivulgaci%C3%B3n%20cient%C3%ADfica%3C%2Ftd%3E%0A%20%20%20%20%3C%2Ftr%3E%0A%20%20%3C%2Ftbody%3E%0A%3C%2Ftable%3E" download="tabla-2.xml" class="table-download-btn" title="Descargar como XML">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+              <span>XML</span>
+            </a>
+          </div>
+        </div>
+        <div class="table-wrapper">
+          <table style="width:100%; border-collapse: collapse; margin:20px 0; border:1px solid #ddd;" id="table-2" class="article-table">
   <thead>
     <tr style="background-color:#f2f2f2;">
       <th style="padding:8px; border:1px solid #ddd;">Año</th>
@@ -3133,9 +3442,9 @@ while t </code></pre>
     <tr><td style="padding:8px; border:1px solid #ddd;">1768-70</td><td style="padding:8px; border:1px solid #ddd;"><em>Lettres à une princesse d'Allemagne</em></td><td style="padding:8px; border:1px solid #ddd;">Divulgación científica</td></tr>
   </tbody>
 </table>
-    </div>
-  </div>
-
+        </div>
+      </div>
+    
 
 <h3 id="appendix-apendice-b-correspondencia-con-christian-goldbach-extracto">Apéndice B: Correspondencia con Christian Goldbach (extracto)</h3>
 
@@ -3189,20 +3498,20 @@ while t </code></pre>
                 <div class="citation-item">
                   <strong>APA</strong>
                   <button class="copy-btn" onclick="copyText('apa-citation', this)">Copiar</button>
-                  <div id="apa-citation-mobile" style="margin-top:0.25rem;">Euler, L. (2025). Elementos de matemáticas y filosofía natural (Thomas Schmidt, Trad.; Elena Martínez Ruiz, Eds.). <em>Clásicos de la Ciencia</em>. https://www.revistacienciasestudiantes.com/collections/classic-science/articles/CC-2025-0520.html</div>
+                  <div id="apa-citation-mobile" style="margin-top:0.25rem;">Euler, L. (2025). Sobre la relación entre el tiempo que tarda un cuerpo en deslizarse por la línea recta que une dos puntos dados y el tiempo mínimo en que, por la acción de la gravedad, pasa de uno a otro siguiendo un arco de cicloide. (Thomas Schmidt, Trad.; Elena Martínez Ruiz, Eds.). <em>Clásicos de la Ciencia</em>. https://www.revistacienciasestudiantes.com/collections/classic-science/articles/CC-2025-0520.html</div>
                 </div>
                 <div class="citation-item">
                   <strong>MLA</strong>
                   <button class="copy-btn" onclick="copyText('mla-citation', this)">Copiar</button>
-                  <div id="mla-citation-mobile" style="margin-top:0.25rem;">Leonhard Euler. "Elementos de matemáticas y filosofía natural." <em>Clásicos de la Ciencia</em>, traducido por Thomas Schmidt, editado por Elena Martínez Ruiz, 2025, https://www.revistacienciasestudiantes.com/collections/classic-science/articles/CC-2025-0520.html.</div>
+                  <div id="mla-citation-mobile" style="margin-top:0.25rem;">Leonhard Euler. "Sobre la relación entre el tiempo que tarda un cuerpo en deslizarse por la línea recta que une dos puntos dados y el tiempo mínimo en que, por la acción de la gravedad, pasa de uno a otro siguiendo un arco de cicloide.." <em>Clásicos de la Ciencia</em>, traducido por Thomas Schmidt, editado por Elena Martínez Ruiz, 2025, https://www.revistacienciasestudiantes.com/collections/classic-science/articles/CC-2025-0520.html.</div>
                 </div>
                 <div class="citation-item">
                   <strong>Chicago</strong>
                   <button class="copy-btn" onclick="copyText('chicago-citation', this)">Copiar</button>
-                  <div id="chicago-citation-mobile" style="margin-top:0.25rem;">Leonhard Euler. "Elementos de matemáticas y filosofía natural." Traducido por Thomas Schmidt. Editado por Elena Martínez Ruiz. <em>Clásicos de la Ciencia</em>, 2025. https://www.revistacienciasestudiantes.com/collections/classic-science/articles/CC-2025-0520.html.</div>
+                  <div id="chicago-citation-mobile" style="margin-top:0.25rem;">Leonhard Euler. "Sobre la relación entre el tiempo que tarda un cuerpo en deslizarse por la línea recta que une dos puntos dados y el tiempo mínimo en que, por la acción de la gravedad, pasa de uno a otro siguiendo un arco de cicloide.." Traducido por Thomas Schmidt. Editado por Elena Martínez Ruiz. <em>Clásicos de la Ciencia</em>, 2025. https://www.revistacienciasestudiantes.com/collections/classic-science/articles/CC-2025-0520.html.</div>
                 </div>
-                 <a href="data:text/plain;charset=utf-8,%40article%7Beuler_1748_elementos-de-matemat%2C%0A%20%20author%20%20%20%20%20%20%20%3D%20%7BLeonhard%20Euler%7D%2C%0A%20%20title%20%20%20%20%20%20%20%20%3D%20%7BElementos%20de%20matem%C3%A1ticas%20y%20filosof%C3%ADa%20natural%7D%2C%0A%20%20journaltitle%20%3D%20%7BRevista%20Nacional%20de%20las%20Ciencias%20para%20Estudiantes%7D%2C%0A%20%20series%20%20%20%20%20%20%20%3D%20%7BCl%C3%A1sicos%20de%20la%20Ciencia%7D%2C%0A%20%20translator%20%20%20%3D%20%7BThomas%20Schmidt%7D%2C%0A%20%20editor%20%20%20%20%20%20%20%3D%20%7BElena%20Mart%C3%ADnez%20Ruiz%7D%2C%0A%20%20year%20%20%20%20%20%20%20%20%20%3D%20%7B2025%7D%2C%0A%20%20origdate%20%20%20%20%20%3D%20%7B1748%7D%2C%0A%20%20url%20%20%20%20%20%20%20%20%20%20%3D%20%7Bhttps%3A%2F%2Fwww.revistacienciasestudiantes.com%2Fcollections%2Fclassic-science%2Farticles%2FCC-2025-0520.html%7D%0A%7D"
-                   download="elementos-de-matematicas-y-filosofia-natural.bib"
+                 <a href="data:text/plain;charset=utf-8,%40article%7Beuler_1748_sobre-la-relacion-en%2C%0A%20%20author%20%20%20%20%20%20%20%3D%20%7BLeonhard%20Euler%7D%2C%0A%20%20title%20%20%20%20%20%20%20%20%3D%20%7BSobre%20la%20relaci%C3%B3n%20entre%20el%20tiempo%20que%20tarda%20un%20cuerpo%20en%20deslizarse%20por%20la%20l%C3%ADnea%20recta%20que%20une%20dos%20puntos%20dados%20y%20el%20tiempo%20m%C3%ADnimo%20en%20que%2C%20por%20la%20acci%C3%B3n%20de%20la%20gravedad%2C%20pasa%20de%20uno%20a%20otro%20siguiendo%20un%20arco%20de%20cicloide.%7D%2C%0A%20%20journaltitle%20%3D%20%7BRevista%20Nacional%20de%20las%20Ciencias%20para%20Estudiantes%7D%2C%0A%20%20series%20%20%20%20%20%20%20%3D%20%7BCl%C3%A1sicos%20de%20la%20Ciencia%7D%2C%0A%20%20translator%20%20%20%3D%20%7BThomas%20Schmidt%7D%2C%0A%20%20editor%20%20%20%20%20%20%20%3D%20%7BElena%20Mart%C3%ADnez%20Ruiz%7D%2C%0A%20%20year%20%20%20%20%20%20%20%20%20%3D%20%7B2025%7D%2C%0A%20%20origdate%20%20%20%20%20%3D%20%7B1748%7D%2C%0A%20%20url%20%20%20%20%20%20%20%20%20%20%3D%20%7Bhttps%3A%2F%2Fwww.revistacienciasestudiantes.com%2Fcollections%2Fclassic-science%2Farticles%2FCC-2025-0520.html%7D%0A%7D"
+                   download="sobre-la-relacion-entre-el-tiempo-que-tarda-un-cuerpo-en-deslizarse-por-la-linea-recta-que-une-dos-puntos-dados-y-el-tiempo-minimo-en-que-por-la-accion-de-la-gravedad-pasa-de-uno-a-otro-siguiendo-un-arco-de-cicloide.bib"
                    class="bibtex-download-btn" style="margin-left: 0;">
                   Descargar BibTeX
                 </a>
@@ -3282,27 +3591,27 @@ while t </code></pre>
       <strong>APA</strong>
       <button class="copy-btn" onclick="copyText('apa-citation', this)">Copiar</button>
       <div id="apa-citation" style="margin-top:0.25rem;">
-        Euler, L. (2025). Elementos de matemáticas y filosofía natural (Thomas Schmidt, Trad.; Elena Martínez Ruiz, Eds.). <em>Clásicos de la Ciencia</em>. https://www.revistacienciasestudiantes.com/collections/classic-science/articles/CC-2025-0520.html
+        Euler, L. (2025). Sobre la relación entre el tiempo que tarda un cuerpo en deslizarse por la línea recta que une dos puntos dados y el tiempo mínimo en que, por la acción de la gravedad, pasa de uno a otro siguiendo un arco de cicloide. (Thomas Schmidt, Trad.; Elena Martínez Ruiz, Eds.). <em>Clásicos de la Ciencia</em>. https://www.revistacienciasestudiantes.com/collections/classic-science/articles/CC-2025-0520.html
       </div>
     </div>
     <div class="citation-item">
       <strong>MLA</strong>
       <button class="copy-btn" onclick="copyText('mla-citation', this)">Copiar</button>
       <div id="mla-citation" style="margin-top:0.25rem;">
-        Leonhard Euler. "Elementos de matemáticas y filosofía natural." <em>Clásicos de la Ciencia</em>, traducido por Thomas Schmidt, editado por Elena Martínez Ruiz, 2025, https://www.revistacienciasestudiantes.com/collections/classic-science/articles/CC-2025-0520.html.
+        Leonhard Euler. "Sobre la relación entre el tiempo que tarda un cuerpo en deslizarse por la línea recta que une dos puntos dados y el tiempo mínimo en que, por la acción de la gravedad, pasa de uno a otro siguiendo un arco de cicloide.." <em>Clásicos de la Ciencia</em>, traducido por Thomas Schmidt, editado por Elena Martínez Ruiz, 2025, https://www.revistacienciasestudiantes.com/collections/classic-science/articles/CC-2025-0520.html.
       </div>
     </div>
     <div class="citation-item">
       <strong>Chicago</strong>
       <button class="copy-btn" onclick="copyText('chicago-citation', this)">Copiar</button>
       <div id="chicago-citation" style="margin-top:0.25rem;">
-        Leonhard Euler. "Elementos de matemáticas y filosofía natural." Traducido por Thomas Schmidt. Editado por Elena Martínez Ruiz. <em>Clásicos de la Ciencia</em>, 2025. https://www.revistacienciasestudiantes.com/collections/classic-science/articles/CC-2025-0520.html.
+        Leonhard Euler. "Sobre la relación entre el tiempo que tarda un cuerpo en deslizarse por la línea recta que une dos puntos dados y el tiempo mínimo en que, por la acción de la gravedad, pasa de uno a otro siguiendo un arco de cicloide.." Traducido por Thomas Schmidt. Editado por Elena Martínez Ruiz. <em>Clásicos de la Ciencia</em>, 2025. https://www.revistacienciasestudiantes.com/collections/classic-science/articles/CC-2025-0520.html.
       </div>
     </div>
     <div class="citation-item" style="border-bottom: none;">
   <strong>BibTeX</strong>
-  <a href="data:text/plain;charset=utf-8,%40article%7Beuler_1748_elementos-de-matemat%2C%0A%20%20author%20%20%20%20%20%20%20%3D%20%7BLeonhard%20Euler%7D%2C%0A%20%20title%20%20%20%20%20%20%20%20%3D%20%7BElementos%20de%20matem%C3%A1ticas%20y%20filosof%C3%ADa%20natural%7D%2C%0A%20%20journaltitle%20%3D%20%7BRevista%20Nacional%20de%20las%20Ciencias%20para%20Estudiantes%7D%2C%0A%20%20series%20%20%20%20%20%20%20%3D%20%7BCl%C3%A1sicos%20de%20la%20Ciencia%7D%2C%0A%20%20translator%20%20%20%3D%20%7BThomas%20Schmidt%7D%2C%0A%20%20editor%20%20%20%20%20%20%20%3D%20%7BElena%20Mart%C3%ADnez%20Ruiz%7D%2C%0A%20%20year%20%20%20%20%20%20%20%20%20%3D%20%7B2025%7D%2C%0A%20%20origdate%20%20%20%20%20%3D%20%7B1748%7D%2C%0A%20%20url%20%20%20%20%20%20%20%20%20%20%3D%20%7Bhttps%3A%2F%2Fwww.revistacienciasestudiantes.com%2Fcollections%2Fclassic-science%2Farticles%2FCC-2025-0520.html%7D%0A%7D" 
-     download="elementos-de-matematicas-y-filosofia-natural.bib"
+  <a href="data:text/plain;charset=utf-8,%40article%7Beuler_1748_sobre-la-relacion-en%2C%0A%20%20author%20%20%20%20%20%20%20%3D%20%7BLeonhard%20Euler%7D%2C%0A%20%20title%20%20%20%20%20%20%20%20%3D%20%7BSobre%20la%20relaci%C3%B3n%20entre%20el%20tiempo%20que%20tarda%20un%20cuerpo%20en%20deslizarse%20por%20la%20l%C3%ADnea%20recta%20que%20une%20dos%20puntos%20dados%20y%20el%20tiempo%20m%C3%ADnimo%20en%20que%2C%20por%20la%20acci%C3%B3n%20de%20la%20gravedad%2C%20pasa%20de%20uno%20a%20otro%20siguiendo%20un%20arco%20de%20cicloide.%7D%2C%0A%20%20journaltitle%20%3D%20%7BRevista%20Nacional%20de%20las%20Ciencias%20para%20Estudiantes%7D%2C%0A%20%20series%20%20%20%20%20%20%20%3D%20%7BCl%C3%A1sicos%20de%20la%20Ciencia%7D%2C%0A%20%20translator%20%20%20%3D%20%7BThomas%20Schmidt%7D%2C%0A%20%20editor%20%20%20%20%20%20%20%3D%20%7BElena%20Mart%C3%ADnez%20Ruiz%7D%2C%0A%20%20year%20%20%20%20%20%20%20%20%20%3D%20%7B2025%7D%2C%0A%20%20origdate%20%20%20%20%20%3D%20%7B1748%7D%2C%0A%20%20url%20%20%20%20%20%20%20%20%20%20%3D%20%7Bhttps%3A%2F%2Fwww.revistacienciasestudiantes.com%2Fcollections%2Fclassic-science%2Farticles%2FCC-2025-0520.html%7D%0A%7D" 
+     download="sobre-la-relacion-entre-el-tiempo-que-tarda-un-cuerpo-en-deslizarse-por-la-linea-recta-que-une-dos-puntos-dados-y-el-tiempo-minimo-en-que-por-la-accion-de-la-gravedad-pasa-de-uno-a-otro-siguiendo-un-arco-de-cicloide.bib"
      class="bibtex-download-btn"
      style="display: inline-flex; align-items: center; gap: 8px; margin-left: 1rem; color: var(--oxford-blue); text-decoration: none; font-size: 0.8rem; font-weight: 500;">
     <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
@@ -3313,9 +3622,9 @@ while t </code></pre>
   </a>
   <!-- Opcional: mantener el preview del BibTeX para referencia -->
   <div style="margin-top: 0.5rem; font-family: monospace; font-size: 0.7rem; white-space: pre-wrap; background: var(--bg-soft); padding: 0.5rem; border-radius: 4px; max-height: 200px; overflow-y: auto;">
-    @article{euler_1748_elementos-de-matemat,
+    @article{euler_1748_sobre-la-relacion-en,
   author       = {Leonhard Euler},
-  title        = {Elementos de matemáticas y filosofía natural},
+  title        = {Sobre la relación entre el tiempo que tarda un cuerpo en deslizarse por la línea recta que une dos puntos dados y el tiempo mínimo en que, por la acción de la gravedad, pasa de uno a otro siguiendo un arco de cicloide.},
   journaltitle = {Revista Nacional de las Ciencias para Estudiantes},
   series       = {Clásicos de la Ciencia},
   translator   = {Thomas Schmidt},
@@ -3925,9 +4234,43 @@ function setupFootnotePopups() {
     });
   });
 }
+// ========== DETECCIÓN Y ADAPTACIÓN DE TÍTULOS LARGOS ==========
+function adaptLongTitles() {
+  const titleElement = document.querySelector('.main-classic-title');
+  if (!titleElement) return;
+  
+  const titleText = titleElement.innerText || titleElement.textContent;
+  
+  // Criterios para considerar un título "muy largo"
+  const isVeryLong = 
+    titleText.length > 80 ||           // Más de 80 caracteres
+    titleText.split(' ').length > 15;   // Más de 15 palabras
+  
+  if (isVeryLong) {
+    titleElement.classList.add('main-classic-title--very-long');
+    
+    // Opcional: Insertar un <wbr> (word break) después de signos de puntuación
+    // para ayudar al navegador a decidir dónde cortar
+    const words = titleText.split(' ');
+    if (words.length > 12) {
+      let newHtml = '';
+      words.forEach((word, index) => {
+        newHtml += word;
+        if (index === 4 || index === 8) {
+          newHtml += '<wbr>'; // Punto de ruptura sugerido
+        }
+        if (index < words.length - 1) {
+          newHtml += ' ';
+        }
+      });
+      titleElement.innerHTML = newHtml;
+    }
+  }
+}
 
-// ========== INICIALIZACIÓN PRINCIPAL ==========
+// Llamar a la función cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', function() {
+  adaptLongTitles();
   console.log('DOM cargado, inicializando...');
   
   setupTOCHighlight();

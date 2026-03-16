@@ -73,6 +73,14 @@ function formatCSVCell(text) {
   return `"${cleanText}"`;
 }
 
+function formatCSVCell(text) {
+  // Preservar notación matemática pero escapar comillas para CSV
+  const preservedMath = preserveMathNotation(text);
+  // Solo escapar comillas dobles para CSV, mantener todo lo demás
+  let cleanText = preservedMath.replace(/"/g, '""');
+  return `"${cleanText}"`;
+}
+
 function tableToCSV(table) {
   const rows = [];
   if (table.headers.length) {
@@ -87,9 +95,9 @@ function tableToCSV(table) {
 function tableToJSON(table) {
   const simpleTable = {
     number: table.number,
-    caption: table.caption,
-    headers: table.headers.map(h => h.text),
-    rows: table.rows.map(row => row.map(cell => cell.text)),
+    caption: preserveMathNotation(table.caption || ''),
+    headers: table.headers.map(h => preserveMathNotation(h.text)),
+    rows: table.rows.map(row => row.map(cell => preserveMathNotation(cell.text))),
     data: []
   };
 
@@ -101,7 +109,7 @@ function tableToJSON(table) {
           .toLowerCase()
           .replace(/\s+/g, '_')
           .replace(/[^\w]/g, '');
-        obj[key] = row[idx]?.text || '';
+        obj[key] = preserveMathNotation(row[idx]?.text || '');
       });
       return obj;
     });
@@ -134,7 +142,7 @@ function tableToLaTeX(table) {
   latex.push('\\centering');
   
   if (table.caption) {
-    latex.push(`\\caption{${escapeLaTeX(table.caption)}}`);
+    latex.push(`\\caption{${escapeLaTeXText(table.caption)}}`);
   }
   
   latex.push(`\\label{tab:${table.number}}`);
@@ -143,7 +151,7 @@ function tableToLaTeX(table) {
 
   if (table.headers.length) {
     const headerLine = table.headers
-      .map(h => escapeLaTeX(h.text))
+      .map(h => escapeLaTeXText(h.text))
       .join(' & ');
     latex.push(headerLine + ' \\\\');
     latex.push('\\hline');
@@ -151,7 +159,7 @@ function tableToLaTeX(table) {
 
   table.rows.forEach(row => {
     const rowLine = row
-      .map(cell => escapeLaTeX(cell.text))
+      .map(cell => escapeLaTeXText(cell.text))
       .join(' & ');
     latex.push(rowLine + ' \\\\');
     latex.push('\\hline');
@@ -162,7 +170,6 @@ function tableToLaTeX(table) {
 
   return latex.join('\n');
 }
-
 function escapeXML(text) {
   return text
     .replace(/&/g, '&amp;')
@@ -286,16 +293,113 @@ function formatDate(dateStr) {
     year: 'numeric' 
   });
 }
+// ========== NUEVA FUNCIÓN PARA PRESERVAR EXPONENTES EN TABLAS ==========
+function preserveMathInTables($) {
+  if (!$) return;
+  
+  // Buscar todas las celdas de tabla que puedan contener notación matemática
+  $('td, th').each((i, cell) => {
+    const $cell = $(cell);
+    let html = $cell.html();
+    
+    // Patrones comunes de notación matemática en texto plano
+    const mathPatterns = [
+      // x^n o x^{n} (exponentes)
+      { pattern: /(\w+)\^\{?([^\}^\s]+)\}?/g, replacement: '$1<sup>$2</sup>' },
+      // x_n o x_{n} (subíndices)
+      { pattern: /(\w+)_\{?([^\}^\s]+)\}?/g, replacement: '$1<sub>$2</sub>' },
+      // e^x (exponente después de e)
+      { pattern: /e\^\{?([^\}^\s]+)\}?/g, replacement: 'e<sup>$1</sup>' },
+      // x^2 (caso específico de cuadrado)
+      { pattern: /(\w+)\^2/g, replacement: '$1²' },
+      // x^3 (cubo)
+      { pattern: /(\w+)\^3/g, replacement: '$1³' },
+      // Notación de derivada: dy/dx
+      { pattern: /dy\/dx/g, replacement: '<em>dy/dx</em>' }
+    ];
+    
+    let newHtml = html;
+    let changed = false;
+    
+    mathPatterns.forEach(({ pattern, replacement }) => {
+      if (pattern.test(newHtml)) {
+        newHtml = newHtml.replace(pattern, replacement);
+        changed = true;
+      }
+    });
+    
+    if (changed) {
+      $cell.html(newHtml);
+    }
+  });
+  
+  // Buscar patrones específicos como "x^n" en texto plano
+  $('td:contains("^"), th:contains("^")').each((i, cell) => {
+    const $cell = $(cell);
+    let html = $cell.html();
+    
+    // Caso específico: x^n donde n puede ser número o letra
+    html = html.replace(/(\w+)\^(\w+)/g, '$1<sup>$2</sup>');
+    $cell.html(html);
+  });
+  
+  $('td:contains("_"), th:contains("_")').each((i, cell) => {
+    const $cell = $(cell);
+    let html = $cell.html();
+    
+    // Caso específico: x_n
+    html = html.replace(/(\w+)_(\w+)/g, '$1<sub>$2</sub>');
+    $cell.html(html);
+  });
+}
 // ========== FUNCIÓN MEJORADA PARA PROCESAR NOTAS MARGINALES (MÓVIL Y ESCRITORIO) ==========
+// ========== FUNCIÓN MEJORADA PARA PROCESAR NOTAS MARGINALES ==========
 function processNotes($, marginNotesArray) {
   if (!$) return { marginNotes: [] };
   
   let noteCounter = 1;
   let marginCounter = 1;
   
-  // Procesar notas al pie estándar
+  // IMPORTANTE: Identificar contextos matemáticos
+  const mathContexts = [
+    'table', 'td', 'th',  // Dentro de tablas
+    '.math', '.equation',  // Clases matemáticas
+    'em', 'i'              // Puede contener notación itálica matemática
+  ];
+  
+  // Procesar notas al pie estándar - PERO ignorar si están en contexto matemático
   $('sup, .footnote, .note, .footnotemark').each((i, el) => {
     const $el = $(el);
+    
+    // Verificar si el elemento o su padre está en contexto matemático
+    const isInMathContext = $el.parents(mathContexts.join(',')).length > 0;
+    const hasMathParent = mathContexts.some(selector => $el.closest(selector).length > 0);
+    
+    // Si es un exponente o subíndice matemático, NO procesar como nota
+    if (isInMathContext || hasMathParent) {
+      // Convertir a <sup> o <sub> en lugar de nota al pie
+      const text = $el.text();
+      if (text.match(/^[0-9n]+$/)) { // Si el contenido es solo números o 'n'
+        const $parent = $el.parent();
+        const parentText = $parent.text();
+        
+        // Buscar patrón como x^n
+        if (parentText.includes('^')) {
+          const matches = parentText.match(/(\w+)\^(\w+)/);
+          if (matches) {
+            $parent.html($parent.html().replace(/\^(\w+)/, '<sup>$1</sup>'));
+            $el.remove(); // Eliminar el marcador de nota
+            return;
+          }
+        }
+      }
+      
+      // Si no se pudo convertir, al menos no crear nota
+      $el.replaceWith(`<sup>${$el.text()}</sup>`);
+      return;
+    }
+    
+    // Si NO está en contexto matemático, procesar como nota normal
     const noteId = `note-${noteCounter}`;
     const refId = `note-ref-${noteCounter}`;
     
@@ -316,20 +420,30 @@ function processNotes($, marginNotesArray) {
     noteCounter++;
   });
   
-  // PROCESAR NOTAS MARGINALES - VERSIÓN UNIFICADA
+  // PROCESAR NOTAS MARGINALES - con la misma lógica
   $('.marginal-note, .sidenote, .margin-note').each((i, el) => {
     const $el = $(el);
+    
+    // Verificar si está en contexto matemático
+    const isInMathContext = $el.parents(mathContexts.join(',')).length > 0;
+    
+    if (isInMathContext) {
+      // Si es una nota marginal en contexto matemático, probablemente es un error
+      // Convertir a notación matemática en lugar de nota
+      const text = $el.text();
+      $el.replaceWith(`<span class="math-inline">${text}</span>`);
+      return;
+    }
+    
     const marginId = `margin-${marginCounter}`;
     const noteText = $el.html();
     
-    // Guardar para la sidebar derecha y sección móvil
     marginNotesArray.push({
       id: marginId,
       text: noteText,
       number: marginCounter
     });
     
-    // Crear indicador visible con función unificada
     const marginIndicator = `
       <span id="${marginId}" class="margin-note-indicator-wrapper">
         <a href="#" class="margin-note-link" onclick="event.preventDefault(); openMarginNote('${marginId}', ${marginCounter});" title="Ver nota marginal">
@@ -344,7 +458,76 @@ function processNotes($, marginNotesArray) {
   
   return marginNotesArray;
 }
-// ========== FUNCIÓN PARA PROCESAR CONTENIDO RICO (CON MÁS FORMATOS DE TABLA) ==========
+// ========== NUEVA FUNCIÓN PARA PRESERVAR MATEMÁTICAS ==========
+function preserveMathNotation(text) {
+  if (!text) return text;
+  
+  // Patrones para detectar diferentes tipos de notación matemática
+  const mathPatterns = [
+    // Exponentes y subíndices en formato simple (^ y _)
+    { pattern: /(\w+)\^(\{?[^\}]+\}?)/g, replacement: '$1^{$2}' },
+    { pattern: /(\w+)_(\{?[^\}]+\}?)/g, replacement: '$1_{$2}' },
+    
+    // Exponentes con múltiples caracteres entre llaves
+    { pattern: /\^\{([^\}]+)\}/g, replacement: '^{$1}' },
+    { pattern: /\_\{([^\}]+)\}/g, replacement: '_{$1}' },
+    
+    // Ecuaciones entre $$ ... $$
+    { pattern: /\$\$([\s\S]+?)\$\$/g, replacement: '$$$1$$' },
+    
+    // Ecuaciones entre $ ... $
+    { pattern: /\$([^\$]+)\$/g, replacement: '$$1$' },
+    
+    // Notación LaTeX común
+    { pattern: /\\frac\{([^\}]+)\}\{([^\}]+)\}/g, replacement: '\\frac{$1}{$2}' },
+    { pattern: /\\sqrt\{([^\}]+)\}/g, replacement: '\\sqrt{$1}' },
+    { pattern: /\\int/g, replacement: '\\int' },
+    { pattern: /\\sum/g, replacement: '\\sum' },
+    { pattern: /\\prod/g, replacement: '\\prod' },
+    { pattern: /\\lim/g, replacement: '\\lim' },
+    
+    // Letras griegas comunes
+    { pattern: /\\alpha/g, replacement: '\\alpha' },
+    { pattern: /\\beta/g, replacement: '\\beta' },
+    { pattern: /\\gamma/g, replacement: '\\gamma' },
+    { pattern: /\\delta/g, replacement: '\\delta' },
+    { pattern: /\\epsilon/g, replacement: '\\epsilon' },
+    { pattern: /\\theta/g, replacement: '\\theta' },
+    { pattern: /\\lambda/g, replacement: '\\lambda' },
+    { pattern: /\\mu/g, replacement: '\\mu' },
+    { pattern: /\\pi/g, replacement: '\\pi' },
+    { pattern: /\\sigma/g, replacement: '\\sigma' },
+    { pattern: /\\omega/g, replacement: '\\omega' }
+  ];
+  
+  // Aplicar cada patrón para normalizar la notación
+  let processedText = text;
+  mathPatterns.forEach(({ pattern, replacement }) => {
+    processedText = processedText.replace(pattern, replacement);
+  });
+  
+  return processedText;
+}
+
+// ========== FUNCIÓN MODIFICADA PARA ESCAPE LaTeX (SOLO TEXTO) ==========
+function escapeLaTeXText(text) {
+  // Primero, preservar la notación matemática
+  const withMath = preserveMathNotation(text);
+  
+  // Luego, escapar SOLO los caracteres que NO son parte de comandos LaTeX válidos
+  return withMath
+    // Escapar &, %, $, #, {, }, ~ fuera de comandos
+    .replace(/&/g, '\\&')
+    .replace(/%/g, '\\%')
+    .replace(/#/g, '\\#')
+    .replace(/~/g, '\\textasciitilde ')
+    // NO escapar ^ y _ que forman parte de notación matemática válida
+    // Solo escapar si están sueltos y no seguidos de { o un comando
+    .replace(/([^\\])\^([^\{])/g, '$1\\textasciicircum $2')
+    .replace(/([^\\])_([^\{])/g, '$1\\_$2')
+    // Escapar backslashes que no sean parte de comandos
+    .replace(/\\(?!alpha|beta|gamma|delta|epsilon|theta|lambda|mu|pi|sigma|omega|frac|sqrt|int|sum|prod|lim)/g, '\\textbackslash ');
+}
 function processRichContent($, specialElementsArray) {
   if (!$) return specialElementsArray;
   
@@ -353,7 +536,43 @@ function processRichContent($, specialElementsArray) {
   let codeIndex = 0;
   let equationIndex = 0;
   
-  // ===== PROCESAR BLOQUES DE CÓDIGO (igual que antes, pero con SVG en lugar de emojis) =====
+  // ===== PROCESAR ECUACIONES CON ANOTACIONES (NUEVO) =====
+  function processEquationsWithAnnotations($) {
+    if (!$) return;
+    
+    // Buscar ecuaciones con anotaciones especiales
+    $('.equation-with-annotation, .math-annotation-wrapper').each((i, el) => {
+      const $el = $(el);
+      const annotation = $el.attr('data-annotation') || '';
+      const annotationSide = $el.attr('data-side') || 'right';
+      
+      if (annotation) {
+        $el.wrap('<div class="equation-specimen"></div>');
+        
+        // Añadir anotación al margen
+        const annotationHtml = `
+          <div class="math-annotation ${annotationSide === 'left' ? 'left' : ''}">
+            ${annotation}
+          </div>
+        `;
+        
+        $el.before(annotationHtml);
+      }
+    });
+    
+    // Procesar variables con tooltips
+    $('.math-variable-tooltip').each((i, el) => {
+      const $el = $(el);
+      const variableName = $el.attr('data-variable') || '';
+      const variableDesc = $el.attr('data-description') || '';
+      
+      if (variableName && variableDesc) {
+        $el.attr('data-mjx-variable', variableDesc);
+      }
+    });
+  }
+
+  // ===== PROCESAR BLOQUES DE CÓDIGO =====
   $('pre').each((i, el) => {
     const $el = $(el);
     
@@ -396,7 +615,7 @@ function processRichContent($, specialElementsArray) {
     
     const escapedCode = code.replace(/</g, '&lt;').replace(/>/g, '&gt;');
     
-    // SVG para el botón copiar (en lugar de emoji)
+    // SVG para el botón copiar
     const copySvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
     
     const codeHtml = `
@@ -419,10 +638,8 @@ function processRichContent($, specialElementsArray) {
     
     $el.replaceWith(codeHtml);
   });
-    // ===== PROCESAR TABLAS CON MÚLTIPLES FORMATOS DE DESCARGA =====
-  // ELIMINADO: let tableIndex = 0;
-  // ELIMINADO: resetTableCounter();
 
+  // ===== PROCESAR TABLAS =====
   $('table').each((i, el) => {
     const $el = $(el);
     
@@ -430,23 +647,17 @@ function processRichContent($, specialElementsArray) {
       return;
     }
     
-    // --- INICIO DE LOS CAMBIOS ---
-    // 1. Llamamos a parseTable PRIMERO. Ella incrementará el contador y nos devolverá el modelo.
     const tableModel = parseTable($, $el);
-    
-    // 2. Obtenemos el número de tabla desde el modelo recién creado.
     const tableNumber = tableModel.number;
-    
-    // 3. Generamos el ID y lo asignamos, usando el número correcto del modelo.
     const tableId = `table-${tableNumber}`;
+    
     $el.attr('id', tableId);
     $el.addClass('article-table');
-    // --- FIN DE LOS CAMBIOS ---
     
     specialElementsArray.push({
       type: 'table',
       id: tableId,
-      title: tableModel.caption || `Tabla ${tableNumber}` // Usamos tableNumber
+      title: tableModel.caption || `Tabla ${tableNumber}`
     });
     
     const csvContent = tableToCSV(tableModel);
@@ -457,61 +668,60 @@ function processRichContent($, specialElementsArray) {
     
     const BOM = '\uFEFF';
     
-    // SVG icons para los botones (sin cambios)
+    // SVG icons para los botones
     const csvSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12h6"/><path d="M9 16h6"/><path d="M9 8h3"/><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>`;
     const excelSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>`;
     const jsonSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 20c-1.5 0-2.5-1-2.5-2.5v-3.5c0-1-1-1.5-2-1.5s-2-.5-2-1.5v-1c0-1 1-1.5 2-1.5s2-.5 2-1.5v-3.5c0-1.5 1-2.5 2.5-2.5"/><path d="M14 4c1.5 0 2.5 1 2.5 2.5v3.5c0 1 1 1.5 2 1.5s2 .5 2 1.5v1c0 1-1 1.5-2 1.5s-2 .5-2 1.5v3.5c0 1.5-1 2.5-2.5 2.5"/></svg>`;
     const latexSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 4h-12l7 8-7 8h12"/></svg>`;
     const xmlSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>`;
     
-    // En la función processRichContent, dentro del bucle que procesa las tablas
-const tableWrapper = `
-  <div class="table-download-wrapper" id="${tableId}-wrapper">
-    <div class="table-header">
-      <span class="table-label">Tabla ${tableNumber}${tableModel.caption ? ': ' + tableModel.caption : ''}</span>
-      <div class="table-download-buttons">
-        <a href="data:text/csv;charset=utf-8,${encodeURIComponent(BOM + csvContent)}"
-           download="tabla-${tableNumber}.csv"
-           class="table-download-btn" title="Descargar como CSV">
-          ${csvSvg}
-          <span>CSV</span>
-        </a>
-        <a href="data:application/vnd.ms-excel;charset=utf-8,${encodeURIComponent(BOM + excelContent)}"
-           download="tabla-${tableNumber}.xls"
-           class="table-download-btn" title="Descargar como Excel">
-          ${excelSvg}
-          <span>Excel</span>
-        </a>
-        <a href="data:application/json;charset=utf-8,${encodeURIComponent(jsonContent)}"
-           download="tabla-${tableNumber}.json"
-           class="table-download-btn" title="Descargar como JSON">
-          ${jsonSvg}
-          <span>JSON</span>
-        </a>
-        <a href="data:text/plain;charset=utf-8,${encodeURIComponent(latexContent)}"
-           download="tabla-${tableNumber}.tex"
-           class="table-download-btn" title="Descargar como LaTeX">
-          ${latexSvg}
-          <span>LaTeX</span>
-        </a>
-        <a href="data:application/xml;charset=utf-8,${encodeURIComponent(xmlContent)}"
-           download="tabla-${tableNumber}.xml"
-           class="table-download-btn" title="Descargar como XML">
-          ${xmlSvg}
-          <span>XML</span>
-        </a>
+    const tableWrapper = `
+      <div class="table-download-wrapper" id="${tableId}-wrapper">
+        <div class="table-header">
+          <span class="table-label">Tabla ${tableNumber}${tableModel.caption ? ': ' + tableModel.caption : ''}</span>
+          <div class="table-download-buttons">
+            <a href="data:text/csv;charset=utf-8,${encodeURIComponent(BOM + csvContent)}"
+               download="tabla-${tableNumber}.csv"
+               class="table-download-btn" title="Descargar como CSV">
+              ${csvSvg}
+              <span>CSV</span>
+            </a>
+            <a href="data:application/vnd.ms-excel;charset=utf-8,${encodeURIComponent(BOM + excelContent)}"
+               download="tabla-${tableNumber}.xls"
+               class="table-download-btn" title="Descargar como Excel">
+              ${excelSvg}
+              <span>Excel</span>
+            </a>
+            <a href="data:application/json;charset=utf-8,${encodeURIComponent(jsonContent)}"
+               download="tabla-${tableNumber}.json"
+               class="table-download-btn" title="Descargar como JSON">
+              ${jsonSvg}
+              <span>JSON</span>
+            </a>
+            <a href="data:text/plain;charset=utf-8,${encodeURIComponent(latexContent)}"
+               download="tabla-${tableNumber}.tex"
+               class="table-download-btn" title="Descargar como LaTeX">
+              ${latexSvg}
+              <span>LaTeX</span>
+            </a>
+            <a href="data:application/xml;charset=utf-8,${encodeURIComponent(xmlContent)}"
+               download="tabla-${tableNumber}.xml"
+               class="table-download-btn" title="Descargar como XML">
+              ${xmlSvg}
+              <span>XML</span>
+            </a>
+          </div>
+        </div>
+        <div class="table-wrapper">
+          ${$.html($el)}
+        </div>
       </div>
-    </div>
-    <div class="table-wrapper">
-      ${$.html($el)}
-    </div>
-  </div>
-`;
+    `;
     
     $el.replaceWith(tableWrapper);
   });
   
-  // ===== PROCESAR IMÁGENES (CON SVG EN LUGAR DE EMOJIS) =====
+  // ===== PROCESAR IMÁGENES =====
   $('img').each((i, el) => {
     const $el = $(el);
     
@@ -573,9 +783,11 @@ const tableWrapper = `
     });
   });
   
+  // ===== PROCESAR ECUACIONES CON ANOTACIONES (NUEVO) =====
+  processEquationsWithAnnotations($);
+  
   return specialElementsArray;
 }
-
 // ========== FUNCIÓN PARA PROCESAR AUTORES CON ICONOS ==========
 function processAuthorsWithIcons(authors) {
   if (!authors || !Array.isArray(authors)) return 'Autor desconocido';
@@ -1277,10 +1489,11 @@ body {
   
   /* Fondo con textura de papel y viñeta */
   background-color: var(--cream-bg);
-  background-image: 
-    radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.03) 100%),
-    url("https://www.transparenttextures.com/patterns/natural-paper.png");
-  background-attachment: fixed;
+background-image:
+  radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.03) 100%),
+  linear-gradient(rgb(255, 255, 255), rgba(255, 255, 255, 0.69)),
+  url("https://images.unsplash.com/photo-1615800098799-0ccb261b1f92");
+
   
   overflow-x: hidden;
   width: 100%;
@@ -1500,28 +1713,32 @@ p, h1, h2, h3, h4, h5, h6, li, blockquote, .article-content {
   width: 100%;
 }
 
-/* ===== TÍTULO ESTILO SEMINAL - EFECTO PAPEL SOBRE PAPEL ===== */
 .seminal-title-container {
-  text-align: center;
-  padding: 80px 40px;
-  margin-bottom: 50px;
-  
-  /* Degradado que imita desgaste por tiempo */
-  background: linear-gradient(135deg, #fdfcf8 0%, #f4eee1 100%);
-  
-  /* Borde tipo "Gofre" con relieve */
-  border: 1px solid #dcd7c9;
-  
-  /* Sombras para dar profundidad */
-  box-shadow: 
-    inset 0 0 30px rgba(0,0,0,0.02),
-    0 5px 15px rgba(0,0,0,0.05);
-  
-  position: relative;
-  overflow: visible;
-  transition: transform 0.3s ease;
+    text-align: center;
+    padding: 100px 60px; /* Aumentamos el padding para dar "aire" de importancia */
+    margin: 40px auto 60px auto;
+    max-width: 900px;
+    
+    /* FONDO: Usamos el crema más claro para que "brille" sobre el fondo de la página */
+    background-color: var(--cream-bg);
+    background-image: 
+        url("https://www.transparenttextures.com/patterns/natural-paper.png"), /* Textura física */
+        radial-gradient(circle at center, rgba(255,255,255,0.8) 0%, transparent 100%);
+    
+    /* EL MARCO: Un borde doble sutil es la marca de la elegancia británica */
+    border: 1px solid rgba(197, 160, 89, 0.3); /* Borde oro muy suave */
+    outline: 1px solid rgba(197, 160, 89, 0.3);
+    outline-offset: -15px; /* Crea un recuadro interno */
+    
+    /* SOMBRA: Una sombra muy ancha y muy suave para dar "peso visual" */
+    box-shadow: 
+        0 30px 70px rgba(0, 0, 0, 0.07),
+        inset 0 0 50px rgba(255, 255, 255, 0.5);
+    
+    position: relative;
+    overflow: visible;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
-
 .seminal-title-container:hover {
   transform: translateY(-5px);
 }
@@ -1586,35 +1803,109 @@ p, h1, h2, h3, h4, h5, h6, li, blockquote, .article-content {
   display: block;
   margin-bottom: 15px;
 }
-
+/* ===== TÍTULO ESTILO OXFORD UNIVERSITY PRESS ===== */
 .main-classic-title {
-  font-family: 'IM Fell French Canon', serif;
-  font-size: 3.5rem;
-  line-height: 1.1;
-  color: var(--oxford-blue);
-  font-style: italic;
-  margin: 15px 0;
-  font-weight: normal;
+  /* Baskervville: la elegancia británica definitiva */
+  font-family: 'Baskervville', serif;
   
-  /* Efecto de impresión en papel */
-  text-shadow: 0.5px 0.5px 1px rgba(0, 33, 71, 0.2);
-  letter-spacing: -0.01em;
-}
-
-/* Tinta rubricada - primera palabra en rojo */
-.main-classic-title::first-line {
-  color: #8b0000;
-}
-
-.original-title {
-  font-family: 'IM Fell English', serif;
-  font-variant: small-caps;
-  letter-spacing: 0.1em;
-  font-size: 1.1rem;
-  color: #555;
-  margin-top: 0;
+  /* Tamaño fluido: se adapta desde móvil (1.8rem) hasta escritorio grande (4.5rem) */
+  font-size: clamp(1.8rem, 6vw, 4.5rem);
+  
+  /* Line-height ajustado para títulos largos (más compacto) */
+  line-height: 1.05;
+  
+  /* Color Oxford Blue SÓLIDO (sin gradiente) */
+  color: var(--oxford-blue);
+  
+  /* La itálica de Baskerville es pura elegancia académica */
   font-style: italic;
+  font-weight: 400;
+  
+  /* Espaciado profesional */
+  letter-spacing: -0.02em;
+  word-spacing: 0.05em;
+  
+  /* Márgenes automáticos para centrado perfecto */
+  margin: 20px auto;
+  
+  /* Máximo ancho controlado para evitar líneas ridículamente largas */
+  max-width: 900px;
+  
+  /* Sombra tipo "letterpress" - parece hundido en el papel */
+  text-shadow: 
+    0px 1px 1px rgba(255, 255, 255, 0.8),
+    0.5px 0.5px 2px rgba(0, 26, 54, 0.15);
+  
+  /* Ligaduras tipográficas clásicas */
+  font-variant-ligatures: common-ligatures discretionary-ligatures;
+  font-kerning: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  
+  /* Control de saltos de línea para títulos larguísimos */
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  hyphens: auto;
 }
+
+/* TÍTULOS EXTRA LARGOS - Casos especiales */
+.main-classic-title--very-long {
+  font-size: clamp(1.5rem, 5vw, 3.2rem);
+  line-height: 1.2;
+  max-width: 800px;
+}
+
+/* PRIMERA LÍNEA CON ÉNFASIS (efecto "capital" moderno) */
+.main-classic-title::first-line {
+  font-weight: 500;
+  color: var(--oxford-blue);
+  text-shadow: 
+    0px 1px 1px rgba(255, 255, 255, 0.9),
+    0.8px 0.8px 3px rgba(0, 26, 54, 0.2);
+}
+
+/* EFECTO DE TINTA REALISTA (sutil) */
+.main-classic-title {
+  position: relative;
+}
+
+.main-classic-title::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(
+    ellipse at 30% 40%,
+    rgba(0, 26, 54, 0.03) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+  mix-blend-mode: multiply;
+}
+/* ===== TÍTULO ORIGINAL (SUBTÍTULO) ===== */
+.original-title {
+  font-family: 'Baskervville', serif;
+  font-size: clamp(1rem, 3vw, 1.3rem);
+  color: var(--text-muted);
+  font-style: italic;
+  font-variant: small-caps;
+  letter-spacing: 0.15em;
+  margin-top: 0.5rem;
+  opacity: 0.8;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+  word-spacing: 0.1em;
+  
+  /* Línea decorativa sutil */
+  border-top: 1px solid rgba(197, 160, 89, 0.2);
+  padding-top: 1rem;
+  display: inline-block;
+}
+
+
 
 .title-separator {
   width: 150px;
@@ -2939,35 +3230,278 @@ h2 {
     display: block; /* MOSTRAR LA INFO MÓVIL */
   }
 }
-/* ===== ECUACIONES ===== */
-.MathJax_Display, .math-container {
+/* ===== ECUACIONES CON ESTILO MANUSCRITO ANTIGUO ===== */
+.MathJax, .MathJax_Display, .MathJax_CHTML, .math-container {
   margin: 2rem 0 !important;
-  padding: 1.5rem 0.5rem;
-  background: linear-gradient(to right, transparent, var(--bg-soft), transparent);
-  border-top: 1px solid var(--border-color);
-  border-bottom: 1px solid var(--border-color);
+  padding: 0.5rem 0 !important;
+  
+  /* SIN FONDO, SIN BORDES - se fusiona con el texto */
+  background: transparent !important;
+  border: none !important;
+  
+  /* Tinta antigua - textura y peso */
+  color: #2a2a2a !important;
+  text-shadow: 
+    0.5px 0.5px 0 rgba(0, 0, 0, 0.1),
+    1px 1px 1px rgba(0, 0, 0, 0.02);
+  
+  /* Pequeña irregularidad en el peso */
+  font-weight: 400;
+  
+  /* Transiciones suaves */
+  transition: all 0.2s ease;
+  
+  /* Para ecuaciones largas, scroll pero con estilo */
   overflow-x: auto;
   overflow-y: hidden;
-  -webkit-overflow-scrolling: touch;
-  max-width: 100%;
   scrollbar-width: thin;
 }
 
+/* Efecto de "tinta fresca" en hover - como si acabaran de escribirla */
+.MathJax:hover, .math-container:hover {
+  text-shadow: 
+    0.8px 0.8px 0 rgba(139, 30, 63, 0.15),
+    2px 2px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* Variables matemáticas con estilo manuscrito */
+.MathJax .mjx-char, .MathJax_CHTML .mjx-char {
+  font-family: 'IM Fell English', 'Garamond', serif !important;
+  filter: none; /* Sin efectos digitales */
+  transition: color 0.2s ease;
+}
+
+/* Efecto de "anotación manuscrita" en hover para variables importantes */
+.MathJax .mjx-char:hover {
+  color: var(--accent-burgundy) !important;
+  cursor: help;
+  position: relative;
+}
+
+/* Tooltip estilo manuscrito para variables */
+.MathJax .mjx-char[data-mjx-variable]:hover::after {
+  content: attr(data-mjx-variable);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--cream-bg);
+  border: 1px solid var(--old-gold);
+  padding: 4px 8px;
+  font-family: 'IM Fell English', serif;
+  font-size: 0.7rem;
+  white-space: nowrap;
+  box-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+  z-index: 100;
+  pointer-events: none;
+  color: var(--oxford-blue);
+  font-style: italic;
+}
+
+/* Scrollbar con estilo antiguo para ecuaciones largas */
 .MathJax_Display::-webkit-scrollbar,
 .math-container::-webkit-scrollbar {
-  height: 6px;
+  height: 4px;
+  background: transparent;
 }
 
 .MathJax_Display::-webkit-scrollbar-track,
 .math-container::-webkit-scrollbar-track {
-  background: var(--border-color);
-  border-radius: 3px;
+  background: rgba(197, 160, 89, 0.1);
+  border-radius: 2px;
 }
 
 .MathJax_Display::-webkit-scrollbar-thumb,
 .math-container::-webkit-scrollbar-thumb {
-  background: var(--oxford-blue);
-  border-radius: 3px;
+  background: var(--old-gold);
+  border-radius: 2px;
+  opacity: 0.5;
+}
+
+.MathJax_Display::-webkit-scrollbar-thumb:hover,
+.math-container::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-burgundy);
+}
+
+/* ===== ECUACIONES DESTACADAS (ESPECÍMENES) ===== */
+/* Solo para las ecuaciones más importantes */
+.equation-specimen {
+  margin: 3rem auto;
+  max-width: 90%;
+  position: relative;
+  
+  /* Marco invisible con sutiles ornamentos */
+  background: linear-gradient(145deg, transparent 30%, rgba(197, 160, 89, 0.02) 70%);
+  padding: 2rem 1rem;
+  
+  /* Líneas decorativas muy sutiles */
+  border-top: 1px solid rgba(197, 160, 89, 0.15);
+  border-bottom: 1px solid rgba(197, 160, 89, 0.15);
+  
+  /* Sombra interna que imita hendidura del papel */
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.02);
+}
+
+/* Etiqueta de "Teorema" o "Proposición" */
+.equation-label {
+  font-family: 'IM Fell English', serif;
+  font-variant: small-caps;
+  color: var(--accent-burgundy);
+  font-size: 0.75rem;
+  letter-spacing: 3px;
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--cream-bg);
+  padding: 0 1rem;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Número de ecuación estilo antiguo */
+.equation-number {
+  font-family: 'IM Fell English', serif;
+  font-style: italic;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  position: absolute;
+  bottom: -8px;
+  right: 20px;
+  background: var(--cream-bg);
+  padding: 0 0.5rem;
+}
+
+/* ===== ANOTACIONES AL MARGEN PARA ECUACIONES ===== */
+.math-annotation {
+  position: absolute;
+  right: calc(100% + 20px);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 180px;
+  font-family: 'IM Fell English', serif;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--text-light);
+  text-align: right;
+  border-right: 1px solid var(--old-gold);
+  padding-right: 12px;
+  opacity: 0.7;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.math-annotation.left {
+  left: calc(100% + 20px);
+  right: auto;
+  text-align: left;
+  border-right: none;
+  border-left: 1px solid var(--old-gold);
+  padding-right: 0;
+  padding-left: 12px;
+}
+
+.math-annotation:hover {
+  opacity: 1;
+}
+
+/* Para anotaciones dentro del texto de la ecuación */
+.math-note {
+  display: inline-block;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-style: italic;
+  margin-left: 0.5rem;
+  vertical-align: middle;
+  border-left: 1px solid var(--old-gold);
+  padding-left: 0.5rem;
+  line-height: 1.2;
+}
+
+/* ===== NÚMEROS CON ESTILO ANTIGUO (OLD STYLE) ===== */
+.oldstyle-nums {
+  font-variant-numeric: oldstyle-nums;
+  -moz-font-feature-settings: "onum";
+  -webkit-font-feature-settings: "onum";
+  font-feature-settings: "onum";
+}
+
+/* Aplicar a ecuaciones y números */
+.MathJax .mjx-num, 
+.equation-number,
+.page-number {
+  font-variant-numeric: oldstyle-nums;
+  -moz-font-feature-settings: "onum";
+  -webkit-font-feature-settings: "onum";
+  font-feature-settings: "onum";
+}
+
+/* ===== FRACCIONES CON ESTILO MANUSCRITO ===== */
+.MathJax .mjx-frac {
+  font-size: 0.9em; /* Fracciones ligeramente más pequeñas como en manuscritos */
+}
+
+.MathJax .mjx-frac:hover {
+  background: rgba(197, 160, 89, 0.05);
+  border-radius: 2px;
+}
+
+/* ===== SÍMBOLOS ESPECIALES CON CARÁCTER ===== */
+/* Integrales con cola más larga como en manuscritos antiguos */
+.MathJax .mjx-mo[data-mjx-name="int"] {
+  transform: scale(1.2, 1.1);
+  display: inline-block;
+}
+
+/* Símbolos de suma y producto con más peso */
+.MathJax .mjx-mo[data-mjx-name="sum"],
+.MathJax .mjx-mo[data-mjx-name="prod"] {
+  font-weight: 600;
+  transform: scale(1.1);
+}
+
+/* ===== RESPONSIVE PARA ECUACIONES ===== */
+@media (max-width: 1100px) {
+  .math-annotation {
+    position: static;
+    width: auto;
+    margin: 0.5rem 0 0.5rem 1rem;
+    text-align: left;
+    border-right: none;
+    border-left: 2px solid var(--old-gold);
+    padding-left: 0.75rem;
+    opacity: 1;
+    transform: none;
+  }
+  
+  .equation-specimen {
+    max-width: 100%;
+    padding: 1.5rem 0.5rem;
+  }
+  
+  .equation-label {
+    font-size: 0.65rem;
+    white-space: normal;
+    text-align: center;
+    width: 100%;
+    padding: 0 0.5rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .MathJax, .MathJax_Display {
+    font-size: 0.9rem;
+  }
+  
+  .equation-specimen {
+    padding: 1rem 0.25rem;
+  }
+  
+  .math-annotation {
+    margin-left: 0.5rem;
+    padding-left: 0.5rem;
+    font-size: 0.7rem;
+  }
 }
 
 /* ===== LISTAS ===== */
@@ -3641,7 +4175,26 @@ blockquote cite {
   letter-spacing: 4px;
   padding-top: 30px;
 }
+/* EFECTO DE TINTA REALISTA (USAR CON MODERACIÓN) */
+.main-classic-title {
+  position: relative;
+}
 
+.main-classic-title::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(
+    ellipse at 30% 40%,
+    rgba(0, 26, 54, 0.03) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+  mix-blend-mode: multiply;
+}
 /* ===== RESPONSIVE ===== */
 @media (max-width: 1100px) {
   .main-wrapper {
@@ -3888,10 +4441,10 @@ blockquote cite {
       <article>
         <!-- TÍTULO SEMINAL -->
         <div class="seminal-title-container">
-          <span class="collection-tag">Clásicos de la Ciencia</span>
-          <h1 class="main-classic-title">${title}</h1>
-          ${originalTitle ? `<div class="original-title">${originalTitle}</div>` : ''}
-          <div class="title-separator"></div>
+  <span class="collection-tag">Clásicos de la Ciencia</span>
+  <h1 class="main-classic-title" data-title-length="${title.length}">${title}</h1>
+  ${originalTitle ? `<div class="original-title">${originalTitle}</div>` : ''}
+  <div class="title-separator"></div>
           
           <!-- METADATA DE ARCHIVO -->
           <div class="archive-metadata">
@@ -4712,9 +5265,43 @@ function setupFootnotePopups() {
     });
   });
 }
+// ========== DETECCIÓN Y ADAPTACIÓN DE TÍTULOS LARGOS ==========
+function adaptLongTitles() {
+  const titleElement = document.querySelector('.main-classic-title');
+  if (!titleElement) return;
+  
+  const titleText = titleElement.innerText || titleElement.textContent;
+  
+  // Criterios para considerar un título "muy largo"
+  const isVeryLong = 
+    titleText.length > 80 ||           // Más de 80 caracteres
+    titleText.split(' ').length > 15;   // Más de 15 palabras
+  
+  if (isVeryLong) {
+    titleElement.classList.add('main-classic-title--very-long');
+    
+    // Opcional: Insertar un <wbr> (word break) después de signos de puntuación
+    // para ayudar al navegador a decidir dónde cortar
+    const words = titleText.split(' ');
+    if (words.length > 12) {
+      let newHtml = '';
+      words.forEach((word, index) => {
+        newHtml += word;
+        if (index === 4 || index === 8) {
+          newHtml += '<wbr>'; // Punto de ruptura sugerido
+        }
+        if (index < words.length - 1) {
+          newHtml += ' ';
+        }
+      });
+      titleElement.innerHTML = newHtml;
+    }
+  }
+}
 
-// ========== INICIALIZACIÓN PRINCIPAL ==========
+// Llamar a la función cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', function() {
+  adaptLongTitles();
   console.log('DOM cargado, inicializando...');
   
   setupTOCHighlight();
