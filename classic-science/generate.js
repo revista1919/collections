@@ -4447,23 +4447,35 @@ blockquote cite {
   <div class="title-separator"></div>
           
           <!-- METADATA DE ARCHIVO -->
-          <div class="archive-metadata">
-            ${article['original-date'] ? `
-            <div class="meta-column">
-              <span class="meta-label">Publicado originalmente</span>
-              <span class="meta-value">${article['original-date']}</span>
-            </div>
-            ` : ''}
-            <div class="meta-column">
-              <span class="meta-label">Identificador</span>
-              <span class="meta-value">${article.id || 'CC-0000-0000'}</span>
-            </div>
-            <div class="meta-column">
-              <span class="meta-label">Idioma</span>
-              <span class="meta-value">Español (Traducción)</span>
-            </div>
-          </div>
-        </div>
+          <!-- METADATA DE ARCHIVO -->
+<div class="archive-metadata">
+  ${article['original-date'] ? `
+  <div class="meta-column">
+    <span class="meta-label">Año original</span>
+    <span class="meta-value">${(() => {
+      // Extraer solo el año de original-date
+      const date = article['original-date'];
+      if (date.match(/^\d{4}$/)) return date;
+      if (date.match(/^\d{2}-\d{2}-\d{4}$/)) return date.split('-')[2];
+      try {
+        return new Date(date).getFullYear();
+      } catch {
+        return date;
+      }
+    })()}</span>
+  </div>
+  ` : ''}
+  
+  <div class="meta-column">
+    <span class="meta-label">Año traducción</span>
+    <span class="meta-value">${new Date().getFullYear()}</span>
+  </div>
+  
+  <div class="meta-column">
+    <span class="meta-label">Idioma original</span>
+    <span class="meta-value">${article.idioma || 'No especificado'}</span>
+  </div>
+</div>
 
         <!-- AUTORES -->
         <div class="authors-section">
@@ -4612,13 +4624,27 @@ blockquote cite {
                 <span class="metadata-value">${article.id || 'N/A'}</span>
               </div>
               <div class="metadata-item">
-                <span class="metadata-label">Fecha original</span>
-                <span class="metadata-value">${article['original-date'] || 'N/A'}</span>
-              </div>
-              <div class="metadata-item">
-                <span class="metadata-label">Traducción</span>
-                <span class="metadata-value">${article.date || formatDate(new Date())}</span>
-              </div>
+  <span class="metadata-label">Año original</span>
+  <span class="metadata-value">${(() => {
+    const date = article['original-date'];
+    if (!date) return 'N/A';
+    if (date.match(/^\d{4}$/)) return date;
+    if (date.match(/^\d{2}-\d{2}-\d{4}$/)) return date.split('-')[2];
+    try {
+      return new Date(date).getFullYear();
+    } catch {
+      return date;
+    }
+  })()}</span>
+</div>
+<div class="metadata-item">
+  <span class="metadata-label">Año traducción</span>
+  <span class="metadata-value">${new Date().getFullYear()}</span>
+</div>
+<div class="metadata-item">
+  <span class="metadata-label">Idioma original</span>
+  <span class="metadata-value">${article.idioma || 'No especificado'}</span>
+</div>
             </div>
 
             <div id="mobile-notes" class="tab-panel">
@@ -4704,13 +4730,27 @@ blockquote cite {
             <span class="metadata-value">${article.id || 'N/A'}</span>
           </div>
           <div class="metadata-item">
-            <span class="metadata-label">Fecha original</span>
-            <span class="metadata-value">${article['original-date'] || 'N/A'}</span>
-          </div>
-          <div class="metadata-item">
-            <span class="metadata-label">Traducción</span>
-            <span class="metadata-value">${article.date || formatDate(new Date())}</span>
-          </div>
+  <span class="metadata-label">Año original</span>
+  <span class="metadata-value">${(() => {
+    const date = article['original-date'];
+    if (!date) return 'N/A';
+    if (date.match(/^\d{4}$/)) return date;
+    if (date.match(/^\d{2}-\d{2}-\d{4}$/)) return date.split('-')[2];
+    try {
+      return new Date(date).getFullYear();
+    } catch {
+      return date;
+    }
+  })()}</span>
+</div>
+<div class="metadata-item">
+  <span class="metadata-label">Año traducción</span>
+  <span class="metadata-value">${new Date().getFullYear()}</span>
+</div>
+<div class="metadata-item">
+  <span class="metadata-label">Idioma original</span>
+  <span class="metadata-value">${article.idioma || 'No especificado'}</span>
+</div>
           ${article.keywords && article.keywords.length > 0 ? `
           <h4 style="margin-top:1rem;">Palabras clave</h4>
           <div class="keywords">
