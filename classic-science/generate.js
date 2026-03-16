@@ -1360,7 +1360,46 @@ async function generateArticleHtml(article) {
   const authorModals = generateAuthorModals(article.author);
   const collaboratorsHtml = processCollaborators(article.colaboradores);
   const citations = processCitations(article);
-  
+    // ================================================================
+  // 7. PROCESAR PDF PARA PREVISUALIZACIÓN (NUEVO - CORREGIDO)
+  // ================================================================
+  let pdfPreviewHtml = '';
+  if (article['pdf-url']) {
+    pdfPreviewHtml = `
+      <section id="pdf-preview" class="pdf-preview-section">
+        <h2>${article['name-translated'] ? 'Visualización del PDF' : 'PDF Preview'}</h2>
+        <div class="pdf-preview-container">
+          <embed src="${article['pdf-url']}" 
+                 type="application/pdf" 
+                 class="pdf-embed" 
+                 title="Previsualización del PDF" />
+        </div>
+        <div class="pdf-actions">
+          <a href="${article['pdf-url']}" 
+             target="_blank" 
+             rel="noopener noreferrer" 
+             class="btn-pdf btn-open">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+              <polyline points="15 3 21 3 21 9"/>
+              <line x1="10" y1="14" x2="21" y2="3"/>
+            </svg>
+            ${article['name-translated'] ? 'Abrir PDF en nueva pestaña' : 'Open PDF in new tab'}
+          </a>
+          <a href="${article['pdf-url']}" 
+             download 
+             class="btn-pdf btn-download">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            ${article['name-translated'] ? 'Descargar PDF' : 'Download PDF'}
+          </a>
+        </div>
+      </section>
+    `;
+  }
   // ================================================================
   // 7. GENERAR HTML FINAL
   // ================================================================
