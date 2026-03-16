@@ -1377,7 +1377,8 @@ async function generateArticleHtml(article) {
     appendixHtml: processedAppendix,
     editorialNoteHtml: processedEditorialNote,
     specialElements: allSpecialElements,
-    citations
+    citations,
+    pdfPreviewHtml
   });
 
   fs.writeFileSync(outputFile, htmlContent, 'utf8');
@@ -1396,7 +1397,8 @@ function generateHtmlTemplate({
   appendixHtml,          // Apéndice procesado
   editorialNoteHtml,     // Nota editorial procesada
   specialElements,
-  citations
+  citations,
+  pdfPreviewHtml  
 }) {
   const hasSpanishTitle = article['name-translated'] && article['name-translated'].trim() !== '';
   const hasOriginalTitle = article['name-original'] && article['name-original'].trim() !== '';
@@ -4082,7 +4084,84 @@ blockquote cite {
 .margin-note-backlink a:hover {
   text-decoration: underline;
 }
+/* ===== PREVISUALIZACIÓN PDF ===== */
+.pdf-preview-section {
+  margin: 3rem 0;
+  scroll-margin-top: 100px;
+}
 
+.pdf-preview-container {
+  width: 100%;
+  height: 700px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 1.5rem 0;
+  background: var(--bg-soft);
+}
+
+.pdf-embed {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
+
+.pdf-actions {
+  display: flex;
+  gap: 1rem;
+  margin: 1rem 0;
+  flex-wrap: wrap;
+}
+
+.btn-pdf.btn-open {
+  background: var(--oxford-blue);
+}
+
+.btn-pdf.btn-download {
+  background: var(--british-green);
+}
+
+.btn-pdf {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  text-decoration: none;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: white;
+  transition: opacity 0.2s;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-pdf:hover {
+  opacity: 0.9;
+}
+
+/* Responsive para PDF */
+@media (max-width: 1100px) {
+  .pdf-preview-container {
+    height: 500px;
+  }
+}
+
+@media (max-width: 600px) {
+  .pdf-preview-container {
+    height: 400px;
+  }
+  
+  .pdf-actions {
+    flex-direction: column;
+  }
+  
+  .btn-pdf {
+    justify-content: center;
+  }
+}
 /* ===== FOOTER CON AZUL OXFORD ===== */
 .footer {
   background: var(--oxford-blue) !important;
@@ -4511,10 +4590,11 @@ blockquote cite {
         <div class="action-bar">
           <a href="${article['pdf-url']}" target="_blank" rel="noopener" class="btn-pdf">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/>
-              <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+              <polyline points="15 3 21 3 21 9"/>
+              <line x1="10" y1="14" x2="21" y2="3"/>
             </svg>
-            Descargar PDF
+            Abrir PDF
           </a>
           <span class="oa-label">
             ${oaSvg}
@@ -4566,6 +4646,8 @@ blockquote cite {
           ${appendixHtml}
         </section>
         ` : ''}
+<!-- PREVISUALIZACIÓN PDF -->
+        ${pdfPreviewHtml ? pdfPreviewHtml : ''}
 
         <!-- LICENCIA -->
         <section class="license-section">
