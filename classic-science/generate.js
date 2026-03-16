@@ -1756,22 +1756,28 @@ p, h1, h2, h3, h4, h5, h6, li, blockquote, .article-content {
 
 .seminal-title-container {
     text-align: center;
-    padding: 100px 60px; /* Aumentamos el padding para dar "aire" de importancia */
+    padding: 100px 60px;
     margin: 40px auto 60px auto;
     max-width: 900px;
-    
-    /* FONDO: Usamos el crema más claro para que "brille" sobre el fondo de la página */
-    background-color: var(--cream-bg);
+
+    /* ========== IMAGEN DE FONDO ========== */
     background-image: 
-        url("https://www.transparenttextures.com/patterns/natural-paper.png"), /* Textura física */
-        radial-gradient(circle at center, rgba(255,255,255,0.8) 0%, transparent 100%);
+        linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), /* Capa oscura */
+        var(--title-image, none); /* La imagen que vendrá del JSON */
+
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
     
-    /* EL MARCO: Un borde doble sutil es la marca de la elegancia británica */
-    border: 1px solid rgba(197, 160, 89, 0.3); /* Borde oro muy suave */
+    /* Mantenemos la textura de papel superpuesta */
+    background-blend-mode: overlay; /* Mezcla la imagen con el color */
+
+    /* EL MARCO: Un borde doble sutil */
+    border: 1px solid rgba(197, 160, 89, 0.3);
     outline: 1px solid rgba(197, 160, 89, 0.3);
-    outline-offset: -15px; /* Crea un recuadro interno */
+    outline-offset: -15px;
     
-    /* SOMBRA: Una sombra muy ancha y muy suave para dar "peso visual" */
+    /* SOMBRA */
     box-shadow: 
         0 30px 70px rgba(0, 0, 0, 0.07),
         inset 0 0 50px rgba(255, 255, 255, 0.5);
@@ -1779,49 +1785,27 @@ p, h1, h2, h3, h4, h5, h6, li, blockquote, .article-content {
     position: relative;
     overflow: visible;
     transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.seminal-title-container:hover {
-  transform: translateY(-5px);
-}
-
-/* Ornamentos en las esquinas */
-.seminal-title-container::before,
-.seminal-title-container::after {
-  content: "❦";
-  position: absolute;
-  color: rgba(212, 175, 55, 0.4);
-  font-size: 1.5rem;
+    
+    /* Color de texto claro para que contraste con el fondo oscuro */
+    color: white;
 }
 
-.seminal-title-container::before {
-  top: 20px;
-  left: 20px;
+/* Ajustar el color del texto del título principal */
+.seminal-title-container .main-classic-title {
+    color: white; /* El título ahora será blanco para verse sobre la imagen oscura */
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5); /* Sombra para mejor legibilidad */
 }
 
-.seminal-title-container::after {
-  bottom: 20px;
-  right: 20px;
-  transform: rotate(180deg);
+/* Ajustar el subtítulo (título original) */
+.seminal-title-container .original-title {
+    color: rgba(255, 255, 255, 0.9);
+    border-top-color: rgba(255, 255, 255, 0.3);
 }
 
-/* Sello de lacre */
-.wax-seal {
-  position: absolute;
-  top: -20px;
-  right: 30px;
-  width: 70px;
-  height: 70px;
-  background: radial-gradient(circle, #b31b1b 0%, #8b0000 100%);
-  border-radius: 50%;
-  box-shadow: 
-    3px 3px 5px rgba(0,0,0,0.3), 
-    inset 2px 2px 4px rgba(255,255,255,0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10;
-  transform: rotate(-10deg);
-  border: 2px solid #7a0000;
+/* La etiqueta "Clásicos de la Ciencia" */
+.seminal-title-container .collection-tag {
+    color: var(--old-gold); /* Se mantiene dorado para destacar */
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
 }
 
 .seal-text {
@@ -4586,7 +4570,8 @@ blockquote cite {
   <h1 class="main-classic-title" data-title-length="${title.length}">${title}</h1>
   ${originalTitle ? `<div class="original-title">${originalTitle}</div>` : ''}
   <div class="title-separator"></div>
-          
+          <!-- TÍTULO SEMINAL -->
+<div class="seminal-title-container" style="--title-image: url('${article.image || ''}');">
           <!-- METADATA DE ARCHIVO -->
 
 <div class="archive-metadata">
