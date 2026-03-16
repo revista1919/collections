@@ -4189,19 +4189,19 @@ blockquote cite {
 }
 
 
-/* BOTÓN ELEGANTE: DESCARGAR PDF */
+/* BOTÓN DESCARGAR — OUTLINE AZUL */
 
 .btn-pdf.btn-download {
   background: transparent;
   color: var(--oxford-blue);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--oxford-blue);
 }
 
 .btn-pdf.btn-download:hover {
-  background: var(--bg-soft);
+  background: var(--oxford-blue);
+  color: white;
   transform: translateY(-1px);
 }
-
 
 /* ===== RESPONSIVE ===== */
 
