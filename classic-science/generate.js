@@ -4124,6 +4124,7 @@ blockquote cite {
   text-decoration: underline;
 }
 /* ===== PREVISUALIZACIÓN PDF ===== */
+
 .pdf-preview-section {
   margin: 3rem 0;
   scroll-margin-top: 100px;
@@ -4153,13 +4154,8 @@ blockquote cite {
   flex-wrap: wrap;
 }
 
-.btn-pdf.btn-open {
-  background: var(--oxford-blue);
-}
 
-.btn-pdf.btn-download {
-  background: var(--british-green);
-}
+/* ===== BOTONES ===== */
 
 .btn-pdf {
   display: inline-flex;
@@ -4167,21 +4163,48 @@ blockquote cite {
   gap: 8px;
   padding: 0.75rem 1.5rem;
   border-radius: 4px;
-  text-decoration: none;
+
   font-family: 'Inter', sans-serif;
   font-weight: 500;
   font-size: 0.9rem;
-  color: white;
-  transition: opacity 0.2s;
-  border: none;
+
+  text-decoration: none;
   cursor: pointer;
+
+  transition: all 0.2s ease;
 }
 
-.btn-pdf:hover {
+
+/* BOTÓN PRINCIPAL: ABRIR PDF */
+
+.btn-pdf.btn-open {
+  background: var(--oxford-blue);
+  color: white;
+  border: none;
+}
+
+.btn-pdf.btn-open:hover {
   opacity: 0.9;
+  transform: translateY(-1px);
 }
 
-/* Responsive para PDF */
+
+/* BOTÓN ELEGANTE: DESCARGAR PDF */
+
+.btn-pdf.btn-download {
+  background: transparent;
+  color: var(--oxford-blue);
+  border: 1px solid var(--border-color);
+}
+
+.btn-pdf.btn-download:hover {
+  background: var(--bg-soft);
+  transform: translateY(-1px);
+}
+
+
+/* ===== RESPONSIVE ===== */
+
 @media (max-width: 1100px) {
   .pdf-preview-container {
     height: 500px;
@@ -4192,11 +4215,11 @@ blockquote cite {
   .pdf-preview-container {
     height: 400px;
   }
-  
+
   .pdf-actions {
     flex-direction: column;
   }
-  
+
   .btn-pdf {
     justify-content: center;
   }
