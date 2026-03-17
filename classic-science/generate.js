@@ -1760,73 +1760,57 @@ p, h1, h2, h3, h4, h5, h6, li, blockquote, .article-content {
     margin: 40px auto 60px auto;
     max-width: 900px;
 
-    /* ========== IMAGEN DE FONDO ========== */
+    /* ========== MEJORA DE IMAGEN Y LEGIBILIDAD ========== */
     background-image: 
-        linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), /* Capa oscura */
-        var(--title-image, none); /* La imagen que vendrá del JSON */
+        /* Gradiente compuesto: Oscurece más los bordes (vignette) para centrar la vista y asegurar legibilidad */
+        radial-gradient(circle, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.7) 100%),
+        linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), 
+        var(--title-image, none);
 
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
     
-    /* Mantenemos la textura de papel superpuesta */
-    background-blend-mode: overlay; /* Mezcla la imagen con el color */
+    /* Cambiamos a 'multiply' o 'soft-light' para que la imagen se integre con elegancia sin perder detalle */
+    background-blend-mode: multiply; 
 
-    /* EL MARCO: Un borde doble sutil */
-    border: 1px solid rgba(197, 160, 89, 0.3);
-    outline: 1px solid rgba(197, 160, 89, 0.3);
+    /* EL MARCO: Refinado para que se sienta premium */
+    border: 1px solid rgba(197, 160, 89, 0.4);
+    outline: 1px solid rgba(197, 160, 89, 0.2);
     outline-offset: -15px;
     
-    /* SOMBRA */
+    /* SOMBRA: Más profunda para dar efecto de elevación */
     box-shadow: 
-        0 30px 70px rgba(0, 0, 0, 0.07),
-        inset 0 0 50px rgba(255, 255, 255, 0.5);
+        0 40px 80px rgba(0, 0, 0, 0.15),
+        inset 0 0 100px rgba(0, 0, 0, 0.2); /* Sombra interna para suavizar los bordes de la imagen */
     
     position: relative;
     overflow: visible;
     transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     
-    /* Color de texto claro para que contraste con el fondo oscuro */
     color: white;
 }
 
 /* Ajustar el color del texto del título principal */
 .seminal-title-container .main-classic-title {
-    color: white; /* El título ahora será blanco para verse sobre la imagen oscura */
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.5); /* Sombra para mejor legibilidad */
+    color: #ffffff;
+    /* Sombra de texto "suave" pero efectiva para despegar la letra del fondo */
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
 }
 
 /* Ajustar el subtítulo (título original) */
 .seminal-title-container .original-title {
-    color: rgba(255, 255, 255, 0.9);
-    border-top-color: rgba(255, 255, 255, 0.3);
+    color: rgba(255, 255, 255, 0.85);
+    border-top: 1px solid rgba(255, 255, 255, 0.3); /* Asegúrate de que sea 'border-top' */
+    padding-top: 10px;
+    display: inline-block; /* Para que el borde no ocupe todo el ancho si no quieres */
 }
 
 /* La etiqueta "Clásicos de la Ciencia" */
 .seminal-title-container .collection-tag {
-    color: var(--old-gold); /* Se mantiene dorado para destacar */
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-}
-
-.seal-text {
-  color: rgba(255, 255, 255, 0.6);
-  font-family: 'Playfair Display', serif;
-  font-weight: bold;
-  font-size: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  padding: 5px;
-  border-radius: 50%;
-  text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-}
-
-.collection-tag {
-  font-family: 'IM Fell English', serif;
-  font-variant: small-caps;
-  letter-spacing: 0.3em;
-  color: var(--accent-burgundy);
-  font-size: 0.85rem;
-  display: block;
-  margin-bottom: 15px;
+    color: #D4AF37; /* Un dorado un poco más vibrante para que no se apague */
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+    letter-spacing: 1px; /* Un toque de aire para mayor elegancia */
 }
 /* ===== TÍTULO ESTILO OXFORD UNIVERSITY PRESS ===== */
 .main-classic-title {
@@ -1880,14 +1864,6 @@ p, h1, h2, h3, h4, h5, h6, li, blockquote, .article-content {
   max-width: 800px;
 }
 
-/* PRIMERA LÍNEA CON ÉNFASIS (efecto "capital" moderno) */
-.main-classic-title::first-line {
-  font-weight: 500;
-  color: var(--oxford-blue);
-  text-shadow: 
-    0px 1px 1px rgba(255, 255, 255, 0.9),
-    0.8px 0.8px 3px rgba(0, 26, 54, 0.2);
-}
 
 /* EFECTO DE TINTA REALISTA (sutil) */
 .main-classic-title {
@@ -1946,7 +1922,7 @@ p, h1, h2, h3, h4, h5, h6, li, blockquote, .article-content {
   top: -10px;
   left: 50%;
   transform: translateX(-50%);
-  background: #f8f6f0; /* Ajustado al color interno de la caja */
+  background: transparent; /* Ajustado al color interno de la caja */
   padding: 0 10px;
   color: var(--old-gold);
 }
@@ -4564,44 +4540,41 @@ blockquote cite {
     <!-- CONTENIDO PRINCIPAL -->
     <main class="article-container">
       <article>
-        <!-- TÍTULO SEMINAL -->
-        <div class="seminal-title-container">
+        <!-- TÍTULO SEMINAL CON IMAGEN DE FONDO -->
+<div class="seminal-title-container" style="--title-image: url('${article.image || ''}');">
   <span class="collection-tag">Clásicos de la Ciencia</span>
   <h1 class="main-classic-title" data-title-length="${title.length}">${title}</h1>
   ${originalTitle ? `<div class="original-title">${originalTitle}</div>` : ''}
   <div class="title-separator"></div>
-          <!-- TÍTULO SEMINAL -->
-<div class="seminal-title-container" style="--title-image: url('${article.image || ''}');">
-          <!-- METADATA DE ARCHIVO -->
-
-<div class="archive-metadata">
-  ${article['original-date'] ? `
-  <div class="meta-column">
-    <span class="meta-label">Año original</span>
-    <span class="meta-value">${(() => {
-      // Extraer solo el año de original-date
-      const date = article['original-date'];
-      if (date.match(/^\d{4}$/)) return date;
-      if (date.match(/^\d{2}-\d{2}-\d{4}$/)) return date.split('-')[2];
-      try {
-        return new Date(date).getFullYear();
-      } catch {
-        return date;
-      }
-    })()}</span>
-  </div>
-  ` : ''}
   
-  <div class="meta-column">
-    <span class="meta-label">Año traducción</span>
-    <span class="meta-value">${new Date().getFullYear()}</span>
+  <!-- METADATA DE ARCHIVO -->
+  <div class="archive-metadata">
+    ${article['original-date'] ? `
+    <div class="meta-column">
+      <span class="meta-label">Año original</span>
+      <span class="meta-value">${(() => {
+        const date = article['original-date'];
+        if (date.match(/^\d{4}$/)) return date;
+        if (date.match(/^\d{2}-\d{2}-\d{4}$/)) return date.split('-')[2];
+        try {
+          return new Date(date).getFullYear();
+        } catch {
+          return date;
+        }
+      })()}</span>
+    </div>
+    ` : ''}
+    
+    <div class="meta-column">
+      <span class="meta-label">Año traducción</span>
+      <span class="meta-value">${new Date().getFullYear()}</span>
+    </div>
+    
+    <div class="meta-column">
+      <span class="meta-label">Idioma original</span>
+      <span class="meta-value">${article.idioma || 'No especificado'}</span>
+    </div>
   </div>
-  
-  <div class="meta-column">
-    <span class="meta-label">Idioma original</span>
-    <span class="meta-value">${article.idioma || 'No especificado'}</span>
-  </div>
-</div>
 </div>
         <!-- AUTORES -->
         <div class="authors-section">

@@ -284,93 +284,61 @@ p, h1, h2, h3, h4, h5, h6, li, blockquote, .article-content {
 
 .seminal-title-container {
     text-align: center;
-    padding: 100px 60px; /* Aumentamos el padding para dar "aire" de importancia */
+    padding: 100px 60px;
     margin: 40px auto 60px auto;
     max-width: 900px;
-    
-    /* FONDO: Usamos el crema más claro para que "brille" sobre el fondo de la página */
-    background-color: var(--cream-bg);
+
+    /* ========== MEJORA DE IMAGEN Y LEGIBILIDAD ========== */
     background-image: 
-        url("https://www.transparenttextures.com/patterns/natural-paper.png"), /* Textura física */
-        radial-gradient(circle at center, rgba(255,255,255,0.8) 0%, transparent 100%);
+        /* Gradiente compuesto: Oscurece más los bordes (vignette) para centrar la vista y asegurar legibilidad */
+        radial-gradient(circle, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.7) 100%),
+        linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), 
+        var(--title-image, none);
+
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
     
-    /* EL MARCO: Un borde doble sutil es la marca de la elegancia británica */
-    border: 1px solid rgba(197, 160, 89, 0.3); /* Borde oro muy suave */
-    outline: 1px solid rgba(197, 160, 89, 0.3);
-    outline-offset: -15px; /* Crea un recuadro interno */
+    /* Cambiamos a 'multiply' o 'soft-light' para que la imagen se integre con elegancia sin perder detalle */
+    background-blend-mode: multiply; 
+
+    /* EL MARCO: Refinado para que se sienta premium */
+    border: 1px solid rgba(197, 160, 89, 0.4);
+    outline: 1px solid rgba(197, 160, 89, 0.2);
+    outline-offset: -15px;
     
-    /* SOMBRA: Una sombra muy ancha y muy suave para dar "peso visual" */
+    /* SOMBRA: Más profunda para dar efecto de elevación */
     box-shadow: 
-        0 30px 70px rgba(0, 0, 0, 0.07),
-        inset 0 0 50px rgba(255, 255, 255, 0.5);
+        0 40px 80px rgba(0, 0, 0, 0.15),
+        inset 0 0 100px rgba(0, 0, 0, 0.2); /* Sombra interna para suavizar los bordes de la imagen */
     
     position: relative;
     overflow: visible;
     transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.seminal-title-container:hover {
-  transform: translateY(-5px);
-}
-
-/* Ornamentos en las esquinas */
-.seminal-title-container::before,
-.seminal-title-container::after {
-  content: "❦";
-  position: absolute;
-  color: rgba(212, 175, 55, 0.4);
-  font-size: 1.5rem;
+    
+    color: white;
 }
 
-.seminal-title-container::before {
-  top: 20px;
-  left: 20px;
+/* Ajustar el color del texto del título principal */
+.seminal-title-container .main-classic-title {
+    color: #ffffff;
+    /* Sombra de texto "suave" pero efectiva para despegar la letra del fondo */
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
 }
 
-.seminal-title-container::after {
-  bottom: 20px;
-  right: 20px;
-  transform: rotate(180deg);
+/* Ajustar el subtítulo (título original) */
+.seminal-title-container .original-title {
+    color: rgba(255, 255, 255, 0.85);
+    border-top: 1px solid rgba(255, 255, 255, 0.3); /* Asegúrate de que sea 'border-top' */
+    padding-top: 10px;
+    display: inline-block; /* Para que el borde no ocupe todo el ancho si no quieres */
 }
 
-/* Sello de lacre */
-.wax-seal {
-  position: absolute;
-  top: -20px;
-  right: 30px;
-  width: 70px;
-  height: 70px;
-  background: radial-gradient(circle, #b31b1b 0%, #8b0000 100%);
-  border-radius: 50%;
-  box-shadow: 
-    3px 3px 5px rgba(0,0,0,0.3), 
-    inset 2px 2px 4px rgba(255,255,255,0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10;
-  transform: rotate(-10deg);
-  border: 2px solid #7a0000;
-}
-
-.seal-text {
-  color: rgba(255, 255, 255, 0.6);
-  font-family: 'Playfair Display', serif;
-  font-weight: bold;
-  font-size: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  padding: 5px;
-  border-radius: 50%;
-  text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-}
-
-.collection-tag {
-  font-family: 'IM Fell English', serif;
-  font-variant: small-caps;
-  letter-spacing: 0.3em;
-  color: var(--accent-burgundy);
-  font-size: 0.85rem;
-  display: block;
-  margin-bottom: 15px;
+/* La etiqueta "Clásicos de la Ciencia" */
+.seminal-title-container .collection-tag {
+    color: #D4AF37; /* Un dorado un poco más vibrante para que no se apague */
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+    letter-spacing: 1px; /* Un toque de aire para mayor elegancia */
 }
 /* ===== TÍTULO ESTILO OXFORD UNIVERSITY PRESS ===== */
 .main-classic-title {
@@ -424,14 +392,6 @@ p, h1, h2, h3, h4, h5, h6, li, blockquote, .article-content {
   max-width: 800px;
 }
 
-/* PRIMERA LÍNEA CON ÉNFASIS (efecto "capital" moderno) */
-.main-classic-title::first-line {
-  font-weight: 500;
-  color: var(--oxford-blue);
-  text-shadow: 
-    0px 1px 1px rgba(255, 255, 255, 0.9),
-    0.8px 0.8px 3px rgba(0, 26, 54, 0.2);
-}
 
 /* EFECTO DE TINTA REALISTA (sutil) */
 .main-classic-title {
@@ -490,7 +450,7 @@ p, h1, h2, h3, h4, h5, h6, li, blockquote, .article-content {
   top: -10px;
   left: 50%;
   transform: translateX(-50%);
-  background: #f8f6f0; /* Ajustado al color interno de la caja */
+  background: transparent; /* Ajustado al color interno de la caja */
   padding: 0 10px;
   color: var(--old-gold);
 }
@@ -2651,7 +2611,107 @@ blockquote cite {
 .margin-note-backlink a:hover {
   text-decoration: underline;
 }
+/* ===== PREVISUALIZACIÓN PDF ===== */
 
+.pdf-preview-section {
+  margin: 3rem 0;
+  scroll-margin-top: 100px;
+}
+
+.pdf-preview-container {
+  width: 100%;
+  height: 700px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 1.5rem 0;
+  background: var(--bg-soft);
+}
+
+.pdf-embed {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
+
+.pdf-actions {
+  display: flex;
+  gap: 1rem;
+  margin: 1rem 0;
+  flex-wrap: wrap;
+}
+
+
+/* ===== BOTONES ===== */
+
+.btn-pdf {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 0.9rem;
+
+  text-decoration: none;
+  cursor: pointer;
+
+  transition: all 0.2s ease;
+}
+
+
+/* BOTÓN PRINCIPAL: ABRIR PDF */
+
+.btn-pdf.btn-open {
+  background: var(--oxford-blue);
+  color: white;
+  border: none;
+}
+
+.btn-pdf.btn-open:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+
+/* BOTÓN DESCARGAR — OUTLINE AZUL CON FONDO */
+
+.btn-pdf.btn-download {
+  background: rgba(10, 35, 66, 0.06);   /* azul muy suave */
+  color: var(--oxford-blue);
+  border: 1px solid var(--oxford-blue);
+}
+
+.btn-pdf.btn-download:hover {
+  background: var(--oxford-blue);
+  color: white;
+  transform: translateY(-1px);
+}
+
+/* ===== RESPONSIVE ===== */
+
+@media (max-width: 1100px) {
+  .pdf-preview-container {
+    height: 500px;
+  }
+}
+
+@media (max-width: 600px) {
+  .pdf-preview-container {
+    height: 400px;
+  }
+
+  .pdf-actions {
+    flex-direction: column;
+  }
+
+  .btn-pdf {
+    justify-content: center;
+  }
+}
 /* ===== FOOTER CON AZUL OXFORD ===== */
 .footer {
   background: var(--oxford-blue) !important;
@@ -3102,32 +3162,33 @@ blockquote cite {
     <!-- CONTENIDO PRINCIPAL -->
     <main class="article-container">
       <article>
-        <!-- TÍTULO SEMINAL -->
-        <div class="seminal-title-container">
+        <!-- TÍTULO SEMINAL CON IMAGEN DE FONDO -->
+<div class="seminal-title-container" style="--title-image: url('https://images.unsplash.com/photo-1633493702341-4d04841df53b?q=80&w=580&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');">
   <span class="collection-tag">Clásicos de la Ciencia</span>
   <h1 class="main-classic-title" data-title-length="218">Sobre la relación entre el tiempo que tarda un cuerpo en deslizarse por la línea recta que une dos puntos dados y el tiempo mínimo en que, por la acción de la gravedad, pasa de uno a otro siguiendo un arco de cicloide.</h1>
   <div class="original-title">Elementa matheseos et philosophiae naturalis</div>
   <div class="title-separator"></div>
-          
-          <!-- METADATA DE ARCHIVO -->
-          <div class="archive-metadata">
-            
-            <div class="meta-column">
-              <span class="meta-label">Publicado originalmente</span>
-              <span class="meta-value">01-01-1748</span>
-            </div>
-            
-            <div class="meta-column">
-              <span class="meta-label">Identificador</span>
-              <span class="meta-value">CC-2025-0520</span>
-            </div>
-            <div class="meta-column">
-              <span class="meta-label">Idioma</span>
-              <span class="meta-value">Español (Traducción)</span>
-            </div>
-          </div>
-        </div>
-
+  
+  <!-- METADATA DE ARCHIVO -->
+  <div class="archive-metadata">
+    
+    <div class="meta-column">
+      <span class="meta-label">Año original</span>
+      <span class="meta-value">1748</span>
+    </div>
+    
+    
+    <div class="meta-column">
+      <span class="meta-label">Año traducción</span>
+      <span class="meta-value">2026</span>
+    </div>
+    
+    <div class="meta-column">
+      <span class="meta-label">Idioma original</span>
+      <span class="meta-value">Latín</span>
+    </div>
+  </div>
+</div>
         <!-- AUTORES -->
         <div class="authors-section">
           <div class="authors">
@@ -3162,10 +3223,11 @@ blockquote cite {
         <div class="action-bar">
           <a href="https://www.revistacienciasestudiantes.com/pdfs/classic-science/CC-2025-0520.pdf" target="_blank" rel="noopener" class="btn-pdf">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/>
-              <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+              <polyline points="15 3 21 3 21 9"/>
+              <line x1="10" y1="14" x2="21" y2="3"/>
             </svg>
-            Descargar PDF
+            Abrir PDF
           </a>
           <span class="oa-label">
             <svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 500 260" style="vertical-align: middle;"><g transform="matrix(1.25 0 0 -1.25 0 360)"><path d="M262.883 200.896v-8.846h25.938v8.846c0 21.412 17.421 38.831 38.831 38.831 21.409 0 38.829-17.419 38.829-38.831v-63.985h25.939v63.985c0 35.713-29.056 64.769-64.768 64.769-35.711 0-64.769-29.056-64.769-64.769M349.153 99.568c0-11.816-9.58-21.396-21.399-21.396-11.818 0-21.398 9.58-21.398 21.396 0 11.823 9.58 21.404 21.398 21.404 11.819 0 21.399-9.581 21.399-21.404" fill="#f68212"/><path d="M277.068 99.799c0 27.811 22.627 50.436 50.438 50.436 27.809 0 50.433-22.625 50.433-50.436 0-27.809-22.624-50.438-50.433-50.438-27.811.001-50.438 22.63-50.438 50.438m-25.938 0c0-42.109 34.265-76.373 76.375-76.373 42.111 0 76.373 34.265 76.373 76.373 0 42.113-34.262 76.375-76.373 76.375-42.11 0-76.375-34.262-76.375-76.375" fill="#f68212"/></g></svg>
@@ -3471,6 +3533,41 @@ while t </code></pre>
      Manuscrito conservado en el Archivo de la Academia de Ciencias de San Petersburgo. Publicado parcialmente en <em>Correspondence of Leonhard Euler with Christian Goldbach</em>, ed. Franz Lemmermeyer, Springer, 2015. <a href="#fnrefA1">↩</a></p>
         </section>
         
+<!-- PREVISUALIZACIÓN PDF -->
+        
+      <section id="pdf-preview" class="pdf-preview-section">
+        <h2>Visualización del PDF</h2>
+        <div class="pdf-preview-container">
+          <embed src="https://www.revistacienciasestudiantes.com/pdfs/classic-science/CC-2025-0520.pdf" 
+                 type="application/pdf" 
+                 class="pdf-embed" 
+                 title="Previsualización del PDF" />
+        </div>
+        <div class="pdf-actions">
+          <a href="https://www.revistacienciasestudiantes.com/pdfs/classic-science/CC-2025-0520.pdf" 
+             target="_blank" 
+             rel="noopener noreferrer" 
+             class="btn-pdf btn-open">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+              <polyline points="15 3 21 3 21 9"/>
+              <line x1="10" y1="14" x2="21" y2="3"/>
+            </svg>
+            Abrir PDF en nueva pestaña
+          </a>
+          <a href="https://www.revistacienciasestudiantes.com/pdfs/classic-science/CC-2025-0520.pdf" 
+             download 
+             class="btn-pdf btn-download">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Descargar PDF
+          </a>
+        </div>
+      </section>
+    
 
         <!-- LICENCIA -->
         <section class="license-section">
@@ -3529,13 +3626,17 @@ while t </code></pre>
                 <span class="metadata-value">CC-2025-0520</span>
               </div>
               <div class="metadata-item">
-                <span class="metadata-label">Fecha original</span>
-                <span class="metadata-value">01-01-1748</span>
-              </div>
-              <div class="metadata-item">
-                <span class="metadata-label">Traducción</span>
-                <span class="metadata-value">20-05-2025</span>
-              </div>
+  <span class="metadata-label">Año original</span>
+  <span class="metadata-value">1748</span>
+</div>
+<div class="metadata-item">
+  <span class="metadata-label">Año traducción</span>
+  <span class="metadata-value">2026</span>
+</div>
+<div class="metadata-item">
+  <span class="metadata-label">Idioma original</span>
+  <span class="metadata-value">Latín</span>
+</div>
             </div>
 
             <div id="mobile-notes" class="tab-panel">
@@ -3647,13 +3748,17 @@ while t </code></pre>
             <span class="metadata-value">CC-2025-0520</span>
           </div>
           <div class="metadata-item">
-            <span class="metadata-label">Fecha original</span>
-            <span class="metadata-value">01-01-1748</span>
-          </div>
-          <div class="metadata-item">
-            <span class="metadata-label">Traducción</span>
-            <span class="metadata-value">20-05-2025</span>
-          </div>
+  <span class="metadata-label">Año original</span>
+  <span class="metadata-value">1748</span>
+</div>
+<div class="metadata-item">
+  <span class="metadata-label">Año traducción</span>
+  <span class="metadata-value">2026</span>
+</div>
+<div class="metadata-item">
+  <span class="metadata-label">Idioma original</span>
+  <span class="metadata-value">Latín</span>
+</div>
           
           <h4 style="margin-top:1rem;">Palabras clave</h4>
           <div class="keywords">
