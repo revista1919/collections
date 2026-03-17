@@ -1257,16 +1257,24 @@ async function generateArticleHtml(article) {
     allSpecialElements.push(...referencesResult.specialElements);
   }
   
-  // ================================================================
-  // 4. PROCESAR NOTA EDITORIAL (si existe)
-  // ================================================================
-  let processedEditorialNote = '';
-  if (article['editorial-note']) {
-    const editorialResult = processHtmlFragment(article['editorial-note'], 'editorial');
+// ================================================================
+// 4. PROCESAR NOTA EDITORIAL (si existe) - CORREGIDO
+// ================================================================
+let processedEditorialNote = '';
+if (article['editorial-note']) {
+  // Extraer el contenido en español si es un objeto
+  let editorialContent = article['editorial-note'];
+  if (typeof editorialContent === 'object') {
+    editorialContent = editorialContent.spanish || editorialContent.english || '';
+  }
+  
+  if (editorialContent) {
+    const editorialResult = processHtmlFragment(editorialContent, 'editorial');
     processedEditorialNote = editorialResult.processed;
     allMarginNotes.push(...editorialResult.marginNotes);
     allSpecialElements.push(...editorialResult.specialElements);
   }
+}
   
   // ================================================================
   // 5. GENERAR TOC CON TODAS LAS SECCIONES
@@ -4463,13 +4471,13 @@ blockquote cite {
       </div>
       
       <div class="sd-search-wrapper">
-        <form id="search-form" class="sd-search-bar">
-          <svg class="sd-search-icon" viewBox="0 0 24 24" width="18" height="18">
-            <path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
-          </svg>
-          <input type="text" id="search-input" placeholder="Buscar en la colección...">
-        </form>
-      </div>
+  <form id="search-form" class="sd-search-bar" action="/collections/classic-science/" method="GET">
+    <svg class="sd-search-icon" viewBox="0 0 24 24" width="18" height="18">
+      <path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+    </svg>
+    <input type="text" id="search-input" name="collection_search" placeholder="Buscar en la colección...">
+  </form>
+</div>
       
       <div class="sd-user-nav">
         <a href="/collections/classic-science/" class="sd-nav-link">Clásicos</a>
@@ -4502,13 +4510,13 @@ blockquote cite {
     
     <!-- Búsqueda móvil -->
     <div class="sd-mobile-search">
-      <form id="mobile-search-form" class="sd-mobile-search-bar" onsubmit="handleMobileSearch(event)">
-        <svg width="16" height="16" viewBox="0 0 24 24">
-          <path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
-        </svg>
-        <input type="text" id="mobile-search-input" placeholder="Buscar en la colección...">
-      </form>
-    </div>
+  <form id="mobile-search-form" class="sd-mobile-search-bar" action="/collections/classic-science/" method="GET">
+    <svg width="16" height="16" viewBox="0 0 24 24">
+      <path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+    </svg>
+    <input type="text" id="mobile-search-input" name="collection_search" placeholder="Buscar en la colección...">
+  </form>
+</div>
     
     <!-- Sección: CONTENIDO DEL ARTÍCULO -->
     <div class="sd-mobile-nav-section">
