@@ -1,0 +1,16 @@
+[
+  {
+    "id": "CC",
+    "title": {
+      "spanish": "Clásicos de la Ciencia"
+    },
+    "description": {
+      "spanish": "Una colección dedicada a la publicación de ediciones críticas de textos científicos clásicos"
+    },
+    "carpet-name": "classic-science",
+    "image": "https://images.unsplash.com/photo-1607359023867-ce2ed72cc1b7",
+    "languages": ["spanish"],
+    "defaultLanguage": "spanish",
+    "status": "active"
+  }
+]
