@@ -975,7 +975,6 @@ function processCitations(article) {
     }
   }
   
-  // Año de la traducción (usar fecha actual o la del artículo)
   const translationYear = article.date ? 
     (article.date.match(/^\d{2}-\d{2}-\d{4}$/) ? article.date.split('-')[2] : new Date().getFullYear().toString()) : 
     new Date().getFullYear().toString();
@@ -990,7 +989,6 @@ function processCitations(article) {
     const nameParts = author.name.split(' ');
     
     if (nameParts.length >= 2) {
-      // Asumimos que el apellido es la última palabra
       authorLastName = nameParts.pop();
       authorInitial = nameParts[0].charAt(0) + '.';
       authorFormatted = `${authorLastName}, ${authorInitial}`;
@@ -1001,7 +999,7 @@ function processCitations(article) {
     }
   }
   
-  // Obtener traductor (de colaboradores con rol "Traductor")
+  // Obtener traductor
   let translator = null;
   if (article.colaboradores && Array.isArray(article.colaboradores)) {
     const translatorObj = article.colaboradores.find(col => 
@@ -1012,78 +1010,54 @@ function processCitations(article) {
     }
   }
   
-  // Si no hay traductor en colaboradores, buscar en editores
-  if (!translator && article.editor && Array.isArray(article.editor)) {
-    // Podríamos asumir que el primer editor es el traductor si no se especifica
-    // Pero mejor dejarlo como null
-  }
-  
-  // Obtener editor(es)
   let editors = [];
   if (article.editor && Array.isArray(article.editor)) {
     editors = article.editor.map(ed => ed.name);
   }
   
-  // Títulos
   const titleTranslated = article['name-translated'] || article['name-original'];
   const titleOriginal = article['name-original'] || '';
   
-  // URL del artículo
   const articleUrl = article.id ? 
     `https://www.revistacienciasestudiantes.com/collections/classic-science/articles/${article.id}.html` : 
     '';
   
-  // Formato APA: Autor original. (Año de la traducción). Título del texto traducido 
-  // (Nombre del traductor, Trad.; Nombre del editor, Ed.). Nombre de la revista, Colección o serie editorial. URL
+  // Formato APA
   let apaCitation = '';
   if (translator && editors.length > 0) {
-    // Con traductor y editor
     apaCitation = `${authorFormatted} (${translationYear}). ${titleTranslated} (${translator}, Trad.; ${editors.join(' & ')}, Eds.). <em>Clásicos de la Ciencia</em>. ${articleUrl}`;
   } else if (translator) {
-    // Solo traductor
     apaCitation = `${authorFormatted} (${translationYear}). ${titleTranslated} (${translator}, Trad.). <em>Clásicos de la Ciencia</em>. ${articleUrl}`;
   } else if (editors.length > 0) {
-    // Solo editor
     apaCitation = `${authorFormatted} (${translationYear}). ${titleTranslated} (${editors.join(' & ')}, Eds.). <em>Clásicos de la Ciencia</em>. ${articleUrl}`;
   } else {
-    // Sin traductor ni editor
     apaCitation = `${authorFormatted} (${translationYear}). ${titleTranslated}. <em>Clásicos de la Ciencia</em>. ${articleUrl}`;
   }
   
-  // Formato MLA: Autor original. "Título del texto traducido." Nombre de la revista, 
-  // traducido por Nombre Apellido, editado por Nombre Apellido, colección editorial, año, URL.
+  // Formato MLA
   let mlaCitation = '';
   const authorFull = article.author && article.author[0] ? article.author[0].name : 'Autor desconocido';
   
   if (translator && editors.length > 0) {
-    // Con traductor y editor
     mlaCitation = `${authorFull}. "${titleTranslated}." <em>Clásicos de la Ciencia</em>, traducido por ${translator}, editado por ${editors.join(' y ')}, ${translationYear}, ${articleUrl}.`;
   } else if (translator) {
-    // Solo traductor
     mlaCitation = `${authorFull}. "${titleTranslated}." <em>Clásicos de la Ciencia</em>, traducido por ${translator}, ${translationYear}, ${articleUrl}.`;
   } else if (editors.length > 0) {
-    // Solo editor
     mlaCitation = `${authorFull}. "${titleTranslated}." <em>Clásicos de la Ciencia</em>, editado por ${editors.join(' y ')}, ${translationYear}, ${articleUrl}.`;
   } else {
-    // Sin traductor ni editor
     mlaCitation = `${authorFull}. "${titleTranslated}." <em>Clásicos de la Ciencia</em>, ${translationYear}, ${articleUrl}.`;
   }
   
-  // Formato Chicago: Autor original. "Título del texto traducido." Traducido por Nombre Apellido. 
-  // Editado por Nombre Apellido. Nombre de la revista, colección editorial, Año. URL.
+  // Formato Chicago
   let chicagoCitation = '';
   
   if (translator && editors.length > 0) {
-    // Con traductor y editor
     chicagoCitation = `${authorFull}. "${titleTranslated}." Traducido por ${translator}. Editado por ${editors.join(' y ')}. <em>Clásicos de la Ciencia</em>, ${translationYear}. ${articleUrl}.`;
   } else if (translator) {
-    // Solo traductor
     chicagoCitation = `${authorFull}. "${titleTranslated}." Traducido por ${translator}. <em>Clásicos de la Ciencia</em>, ${translationYear}. ${articleUrl}.`;
   } else if (editors.length > 0) {
-    // Solo editor
     chicagoCitation = `${authorFull}. "${titleTranslated}." Editado por ${editors.join(' y ')}. <em>Clásicos de la Ciencia</em>, ${translationYear}. ${articleUrl}.`;
   } else {
-    // Sin traductor ni editor
     chicagoCitation = `${authorFull}. "${titleTranslated}." <em>Clásicos de la Ciencia</em>, ${translationYear}. ${articleUrl}.`;
   }
   
@@ -1154,95 +1128,105 @@ async function generateArticleHtml(article) {
     console.warn(`⚠️ ID inválido para artículo: ${article.id || 'sin ID'}`);
   }
   
-  const articleSlug = generateSlug(article['name-translated'] || article['name-original']);
+  // --- IMPORTANTE: Acceder a los campos bilingües ---
+  // Obtener título en español (o inglés si no hay español)
+  const titleSpanish = article.name?.spanish || article['name-original'] || '';
+  const titleEnglish = article.name?.english || '';
+  const titleTranslatedSpanish = article['name-translated']?.spanish || article['name-translated'] || '';
+  const titleTranslatedEnglish = article['name-translated']?.english || '';
+  
+  // Usar el título traducido (español) como principal, o el original si no hay traducción
+  const mainTitle = titleTranslatedSpanish || titleSpanish;
+  const originalTitle = titleSpanish && titleTranslatedSpanish ? titleSpanish : '';
+  
+  const articleSlug = generateSlug(mainTitle);
   const outputFile = path.join(OUTPUT_DIR, `${article.id}.html`);
   
-  // --- NUEVO: Arrays para recolectar elementos de TODAS las secciones ---
+  // --- Arrays para recolectar elementos ---
   const allMarginNotes = [];
   const allSpecialElements = [];
   
+  // Función auxiliar para obtener texto bilingüe
+  const getSpanishText = (field) => {
+    if (!field) return '';
+    if (typeof field === 'string') return field;
+    return field.spanish || field.english || '';
+  };
+  
   function processHtmlFragment(htmlContent, prefix = '') {
-  if (!htmlContent) return { processed: '', marginNotes: [], specialElements: [] };
-  
-  // PASO 1: Limpieza EXTREMA - eliminar TODAS las etiquetas de documento
-  let cleanedHtml = htmlContent
-    // Eliminar DOCTYPE
-    .replace(/<!DOCTYPE[^>]*>/gi, '')
-    // Eliminar TODAS las etiquetas html, head, body con o sin atributos
-    .replace(/<html[^>]*>/gi, '')
-    .replace(/<\/html>/gi, '')
-    .replace(/<head[^>]*>/gi, '')
-    .replace(/<\/head>/gi, '')
-    .replace(/<body[^>]*>/gi, '')
-    .replace(/<\/body>/gi, '')
-    // Eliminar también variantes con espacios o atributos raros
-    .replace(/<html\b[^>]*>/gi, '')
-    .replace(/<head\b[^>]*>/gi, '')
-    .replace(/<body\b[^>]*>/gi, '')
-    // Eliminar posibles etiquetas de cierre mal formadas
-    .replace(/<\/html\s*>/gi, '')
-    .replace(/<\/head\s*>/gi, '')
-    .replace(/<\/body\s*>/gi, '')
-    .trim();
+    if (!htmlContent) return { processed: '', marginNotes: [], specialElements: [] };
+    
+    // Obtener el contenido en español
+    let contentToProcess = htmlContent;
+    if (typeof htmlContent === 'object') {
+      contentToProcess = htmlContent.spanish || htmlContent.english || '';
+    }
+    
+    // PASO 1: Limpieza EXTREMA - eliminar TODAS las etiquetas de documento
+    let cleanedHtml = contentToProcess
+      .replace(/<!DOCTYPE[^>]*>/gi, '')
+      .replace(/<html[^>]*>/gi, '')
+      .replace(/<\/html>/gi, '')
+      .replace(/<head[^>]*>/gi, '')
+      .replace(/<\/head>/gi, '')
+      .replace(/<body[^>]*>/gi, '')
+      .replace(/<\/body>/gi, '')
+      .replace(/<html\b[^>]*>/gi, '')
+      .replace(/<head\b[^>]*>/gi, '')
+      .replace(/<body\b[^>]*>/gi, '')
+      .replace(/<\/html\s*>/gi, '')
+      .replace(/<\/head\s*>/gi, '')
+      .replace(/<\/body\s*>/gi, '')
+      .trim();
 
-  // PASO 2: Si aún quedan, hacer una limpieza más profunda con regex
-  cleanedHtml = cleanedHtml.replace(/<\/?(html|head|body)(\s+[^>]*)?>/gi, '');
-  
-  // PASO 3: Extraer solo el contenido si hay etiquetas anidadas
-  const bodyMatch = cleanedHtml.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
-  if (bodyMatch && bodyMatch[1]) {
-    cleanedHtml = bodyMatch[1];
+    cleanedHtml = cleanedHtml.replace(/<\/?(html|head|body)(\s+[^>]*)?>/gi, '');
+    
+    const bodyMatch = cleanedHtml.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+    if (bodyMatch && bodyMatch[1]) {
+      cleanedHtml = bodyMatch[1];
+    }
+    
+    cleanedHtml = cleanedHtml
+      .replace(/<\/?(html|head|body)[^>]*>/gi, '')
+      .trim();
+
+    const $fragment = cheerio.load(cleanedHtml, { 
+      decodeEntities: false,
+      xmlMode: true
+    });
+    
+    $fragment('script').each((i, el) => {
+      const src = $fragment(el).attr('src');
+      if (src && src.includes('live-server')) {
+        $fragment(el).remove();
+      }
+    });
+    
+    const fragmentMarginNotes = [];
+    const fragmentSpecialElements = [];
+    
+    processNotes($fragment, fragmentMarginNotes);
+    processRichContent($fragment, fragmentSpecialElements);
+    
+    $fragment('h2, h3, h4').each((i, el) => {
+      const $el = $fragment(el);
+      const text = $el.text().trim();
+      if (!text) return;
+      if (!$el.attr('id')) {
+        const level = parseInt(el.tagName[1]);
+        const baseId = generateSlug(text) || `seccion-${level}-${Date.now()}-${i}`;
+        const id = prefix ? `${prefix}-${baseId}` : baseId;
+        $el.attr('id', id);
+      }
+    });
+    
+    return {
+      processed: $fragment.html(),
+      marginNotes: fragmentMarginNotes,
+      specialElements: fragmentSpecialElements
+    };
   }
   
-  // PASO 4: Eliminar cualquier etiqueta html/head/body que pueda haber quedado
-  cleanedHtml = cleanedHtml
-    .replace(/<\/?(html|head|body)[^>]*>/gi, '')
-    .trim();
-
-  // ========== ¡¡¡ CAMBIO CLAVE AQUÍ !!! ==========
-  // PASO 5: Cargar el HTML limpio CON xmlMode: true
-  // Esto evita que Cheerio añada <html>, <head>, <body> automáticamente.
-  const $fragment = cheerio.load(cleanedHtml, { 
-    decodeEntities: false,
-    xmlMode: true // <--- ESTA ES LA LÍNEA MÁGICA
-  });
-  
-  // Eliminar scripts de live-server si existen
-  $fragment('script').each((i, el) => {
-    const src = $fragment(el).attr('src');
-    if (src && src.includes('live-server')) {
-      $fragment(el).remove();
-    }
-  });
-  
-  const fragmentMarginNotes = [];
-  const fragmentSpecialElements = [];
-  
-  // Procesar notas y marginalia
-  processNotes($fragment, fragmentMarginNotes);
-  processRichContent($fragment, fragmentSpecialElements);
-  
-  // Asignar IDs a encabezados con prefijo
-  $fragment('h2, h3, h4').each((i, el) => {
-    const $el = $fragment(el);
-    const text = $el.text().trim();
-    if (!text) return;
-    if (!$el.attr('id')) {
-      const level = parseInt(el.tagName[1]);
-      const baseId = generateSlug(text) || `seccion-${level}-${Date.now()}-${i}`;
-      const id = prefix ? `${prefix}-${baseId}` : baseId;
-      $el.attr('id', id);
-    }
-  });
-  
-  // ========== Y AQUÍ AL OBTENER EL HTML ==========
-  return {
-    // Al hacer xmlMode: true, .html() YA NO AÑADIRÁ LA ESTRUCTURA COMPLETA.
-    processed: $fragment.html(),
-    marginNotes: fragmentMarginNotes,
-    specialElements: fragmentSpecialElements
-  };
-}
   // ================================================================
   // 1. PROCESAR HTML PRINCIPAL
   // ================================================================
@@ -1287,7 +1271,6 @@ async function generateArticleHtml(article) {
   // ================================================================
   // 5. GENERAR TOC CON TODAS LAS SECCIONES
   // ================================================================
-  // Crear un documento combinado para generar el TOC completo
   const combinedHtml = `
     ${mainHtml}
     ${processedAppendix ? '<div class="appendix-wrapper">' + processedAppendix + '</div>' : ''}
@@ -1296,7 +1279,6 @@ async function generateArticleHtml(article) {
   
   const $combined = cheerio.load(combinedHtml, { decodeEntities: false });
   
-  // Generar TOC
   const tocHeadings = [];
   $combined('h2, h3, h4').each((i, el) => {
     const $el = $combined(el);
@@ -1314,7 +1296,6 @@ async function generateArticleHtml(article) {
     }
   });
   
-  // TOC completo con secciones especiales
   const fullToc = [
     ...(article.abstract ? [{
       level: 2,
@@ -1343,7 +1324,6 @@ async function generateArticleHtml(article) {
     }] : [])
   ];
   
-  // Añadir elementos especiales
   allSpecialElements.forEach(el => {
     fullToc.push({
       level: 4,
@@ -1354,20 +1334,50 @@ async function generateArticleHtml(article) {
   });
   
   // ================================================================
-  // 6. PROCESAR AUTORES Y COLABORADORES
+  // 6. PROCESAR AUTORES Y COLABORADORES (adaptado para bilingüe)
   // ================================================================
-  const authorsDisplay = processAuthorsWithIcons(article.author);
-  const authorModals = generateAuthorModals(article.author);
-  const collaboratorsHtml = processCollaborators(article.colaboradores);
-  const citations = processCitations(article);
-    // ================================================================
-  // 7. PROCESAR PDF PARA PREVISUALIZACIÓN (NUEVO - CORREGIDO)
+  // Adaptar autores para el formato bilingüe
+  const adaptedAuthors = (article.author || []).map(author => ({
+    ...author,
+    bio: author.bio?.spanish || author.bio || ''
+  }));
+  
+  const authorsDisplay = processAuthorsWithIcons(adaptedAuthors);
+  const authorModals = generateAuthorModals(adaptedAuthors);
+  
+  // Adaptar colaboradores para el formato bilingüe
+  const adaptedColaboradores = (article.colaboradores || []).map(col => ({
+    ...col,
+    role: col.role?.spanish || col.role || ''
+  }));
+  
+  const collaboratorsHtml = processCollaborators(adaptedColaboradores);
+  
+  // Adaptar abstract para el formato bilingüe
+  const abstractText = article.abstract?.spanish || article.abstract || '';
+  
+  // Adaptar keywords para el formato bilingüe
+  const keywords = article.keywords?.spanish || article.keywords || [];
+  
+  // Procesar citas con el nuevo formato
+  const citations = processCitations({
+    ...article,
+    'name-translated': mainTitle,
+    'name-original': originalTitle || titleSpanish,
+    abstract: abstractText,
+    keywords: keywords,
+    author: adaptedAuthors,
+    colaboradores: adaptedColaboradores
+  });
+  
+  // ================================================================
+  // 7. PROCESAR PDF PARA PREVISUALIZACIÓN
   // ================================================================
   let pdfPreviewHtml = '';
   if (article['pdf-url']) {
     pdfPreviewHtml = `
       <section id="pdf-preview" class="pdf-preview-section">
-        <h2>${article['name-translated'] ? 'Visualización del PDF' : 'PDF Preview'}</h2>
+        <h2>${mainTitle ? 'Visualización del PDF' : 'PDF Preview'}</h2>
         <div class="pdf-preview-container">
           <embed src="${article['pdf-url']}" 
                  type="application/pdf" 
@@ -1384,7 +1394,7 @@ async function generateArticleHtml(article) {
               <polyline points="15 3 21 3 21 9"/>
               <line x1="10" y1="14" x2="21" y2="3"/>
             </svg>
-            ${article['name-translated'] ? 'Abrir PDF en nueva pestaña' : 'Open PDF in new tab'}
+            ${mainTitle ? 'Abrir PDF en nueva pestaña' : 'Open PDF in new tab'}
           </a>
           <a href="${article['pdf-url']}" 
              download 
@@ -1394,17 +1404,25 @@ async function generateArticleHtml(article) {
               <polyline points="7 10 12 15 17 10"/>
               <line x1="12" y1="15" x2="12" y2="3"/>
             </svg>
-            ${article['name-translated'] ? 'Descargar PDF' : 'Download PDF'}
+            ${mainTitle ? 'Descargar PDF' : 'Download PDF'}
           </a>
         </div>
       </section>
     `;
   }
+  
   // ================================================================
-  // 7. GENERAR HTML FINAL
+  // 8. GENERAR HTML FINAL
   // ================================================================
   const htmlContent = generateHtmlTemplate({
-    article,
+    article: {
+      ...article,
+      // Usar los campos adaptados
+      'name-translated': mainTitle,
+      'name-original': originalTitle || titleSpanish,
+      abstract: abstractText,
+      keywords: keywords
+    },
     articleSlug,
     authorsDisplay,
     authorModals,
@@ -5528,8 +5546,25 @@ document.querySelectorAll('.author-modal-content').forEach(function(content) {
 </html>`;
 }
 
-// ========== FUNCIÓN PARA GENERAR ÍNDICE DE LA COLECCIÓN ==========
 function generateCollectionIndex(articles) {
+  // Adaptar cada artículo para el índice
+  const adaptedArticles = articles.map(article => {
+    // Obtener título en español
+    const titleSpanish = article.name?.spanish || article['name-original'] || '';
+    const titleTranslatedSpanish = article['name-translated']?.spanish || article['name-translated'] || '';
+    const mainTitle = titleTranslatedSpanish || titleSpanish;
+    
+    // Obtener autor principal
+    const mainAuthor = article.author && article.author[0] ? 
+      (typeof article.author[0].name === 'string' ? article.author[0].name : '') : '';
+    
+    return {
+      ...article,
+      displayTitle: mainTitle,
+      displayAuthor: mainAuthor
+    };
+  });
+
   const indexHtml = `<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -5650,11 +5685,11 @@ function generateCollectionIndex(articles) {
     </p>
     
     <div class="articles-grid">
-      ${articles.map(article => `
+      ${adaptedArticles.map(article => `
         <a href="${article.id}.html" class="article-card">
           <div class="article-id">${article.id || 'CC-0000-0000'}</div>
-          <div class="article-title">${article['name-translated'] || article['name-original']}</div>
-          <div class="article-author">${article.author && article.author[0] ? article.author[0].name : ''}</div>
+          <div class="article-title">${article.displayTitle}</div>
+          <div class="article-author">${article.displayAuthor}</div>
           <div class="article-date">${article['original-date'] || ''}</div>
         </a>
       `).join('')}
