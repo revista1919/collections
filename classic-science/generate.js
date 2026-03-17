@@ -1270,7 +1270,7 @@ if (article['editorial-note']) {
   
   if (editorialContent) {
     const editorialResult = processHtmlFragment(editorialContent, 'editorial');
-    processedEditorialNote = editorialResult.processed;
+    processedEditorialNote = editorialResult.processed;  // <-- ESTO ES EL HTML LIMPIO
     allMarginNotes.push(...editorialResult.marginNotes);
     allSpecialElements.push(...editorialResult.specialElements);
   }
@@ -4665,12 +4665,12 @@ blockquote cite {
         ` : ''}
 
         <!-- NOTA EDITORIAL -->
-        ${article['editorial-note'] ? `
-        <div class="editorial-note" id="editorial-note">
-          <h3>Nota de la edición</h3>
-          ${article['editorial-note']}
-        </div>
-        ` : ''}
+${editorialNoteHtml ? `
+<div class="editorial-note" id="editorial-note">
+  <h3>Nota de la edición</h3>
+  ${editorialNoteHtml}
+</div>
+` : ''}
 
         <!-- CONTENIDO DEL ARTÍCULO -->
         <section class="article-content" id="full-text">
