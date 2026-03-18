@@ -4453,6 +4453,130 @@ blockquote cite {
     margin: 1.5rem 1rem;
     font-size: 1rem;
   }
+  
+}
+  /* ===== SOLUCIÓN DEFINITIVA PARA MÓVIL: MÁRGENES Y DESBORDAMIENTO ===== */
+
+/* 1. REGLA UNIVERSAL: Todo respeta el ancho de la pantalla */
+* {
+    max-width: 100vw !important;  /* ¡Ningún elemento será más ancho que la pantalla! */
+    box-sizing: border-box !important; /* El padding y borde se incluyen en el ancho */
+    overflow-wrap: break-word !important; /* Las palabras largas se rompen */
+    word-wrap: break-word !important;
+}
+
+/* 2. EL BODY: Nunca se desborda horizontalmente */
+body {
+    overflow-x: hidden !important; /* Oculta cualquier desbordamiento horizontal */
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    position: relative !important;
+}
+
+/* 3. CONTENEDOR PRINCIPAL: Padding universal para que el texto NO toque los bordes */
+.main-wrapper {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+    width: 100% !important;
+    max-width: 1400px !important; /* Mantiene el ancho máximo en escritorio */
+    margin: 0 auto !important;     /* Centrado */
+    box-sizing: border-box !important;
+}
+
+/* 4. HEADER: Se asegura de que esté alineado y no se desborde */
+.sd-header {
+    width: 100% !important;
+    overflow-x: hidden !important;
+}
+
+.sd-header-top {
+    max-width: 100% !important;
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+    box-sizing: border-box !important;
+}
+
+/* 5. CONTENIDO DEL ARTÍCULO: Padding adicional para legibilidad */
+.article-content {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+}
+
+/* 6. CONTENEDOR SEMINAL DEL TÍTULO: Sin desbordes */
+.seminal-title-container {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 15px !important;
+    padding-right: 15px !important;
+    overflow-x: hidden !important;
+}
+
+/* 7. ARCHIVE METADATA: Corrección del ancho y padding */
+.archive-metadata {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+    display: flex !important;
+    flex-wrap: wrap !important; /* Permite que los elementos se envuelvan */
+}
+
+/* 8. TABLAS, BLOQUES DE CÓDIGO Y ELEMENTOS ESPECIALES: Con scroll horizontal si son muy anchos */
+.table-wrapper,
+.code-block-wrapper,
+pre,
+.math-container,
+.MathJax_Display,
+.equation-specimen {
+    max-width: 100% !important;
+    overflow-x: auto !important;  /* Añade scroll horizontal si es necesario */
+    -webkit-overflow-scrolling: touch !important; /* Scroll suave en iOS */
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+/* 9. IMÁGENES: Nunca más anchas que su contenedor */
+.article-image {
+    max-width: 100% !important;
+    height: auto !important;
+}
+
+/* 10. NOTAS MARGINALES Y SIDENOTES: Evitar que floten fuera en móvil */
+@media (max-width: 1100px) {
+    .sidenote,
+    .margin-note,
+    .math-annotation {
+        float: none !important;
+        width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        padding-left: 15px !important;
+        padding-right: 15px !important;
+        box-sizing: border-box !important;
+        position: static !important;
+        right: auto !important;
+        left: auto !important;
+    }
+    
+    /* Corrección para anotaciones de ecuaciones en móvil */
+    .math-annotation {
+        border-left: 2px solid var(--old-gold) !important;
+        border-right: none !important;
+        margin-top: 10px !important;
+        margin-bottom: 10px !important;
+    }
+}
+
+/* 11. REGLA EXTRA: Cualquier elemento que pueda causar desbordamiento */
+iframe, embed, object, video {
+    max-width: 100% !important;
 }
   </style>
 </head>
