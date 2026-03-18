@@ -4478,60 +4478,87 @@ blockquote cite {
         clear: both !important;
     }
     
-    /* ELIMINAR TODOS LOS MÁRGENES NEGATIVOS QUE DESCUADRAN */
+
+    
+    /* Reset específico para el contenedor del título */
+    .seminal-title-container {
+        margin: 0 !important;           /* Sin margen */
+        padding: 50px 15px !important;  /* Padding interno, pero lateral 0 */
+        width: 100vw !important;        /* Ancho completo del viewport */
+        max-width: 100vw !important;
+        position: relative !important;
+        left: 50% !important;
+        right: 50% !important;
+        margin-left: -50vw !important;  /* Truco para centrar */
+        margin-right: -50vw !important;
+        border-left: none !important;
+        border-right: none !important;
+        border-radius: 0 !important;
+    }
+    
+    /* Compensar el padding del contenedor padre */
+    .main-wrapper {
+        padding: 0 !important;
+        overflow-x: hidden !important;
+    }
+    
+    
+    /* TEXTO DEL TÍTULO CON MÁRGENES */
+    .main-classic-title {
+        font-size: 2rem !important;
+        padding: 0 10px !important;
+        margin: 10px 0 !important;
+        word-wrap: break-word !important;
+        text-align: center !important;
+    }
+    
+    .original-title {
+        padding: 0 15px !important;
+        text-align: center !important;
+    }
+    
+        /* ===== VERSIÓN MEJORADA PARA LA CAJITA AZUL ===== */
     .archive-metadata {
+        /* Anular TODOS los estilos de escritorio */
         margin-left: 0 !important;
         margin-right: 0 !important;
         margin-top: 20px !important;
         margin-bottom: 20px !important;
         width: 100% !important;
-        left: 0 !important;
-        right: 0 !important;
+        left: auto !important;
+        right: auto !important;
         transform: none !important;
+        
+        /* Forzar a ocupar el ancho completo del contenedor */
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        
+        /* Asegurar que no haya paddings laterales */
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        
+        /* Mantener el color y estilo */
+        background-color: var(--oxford-blue) !important;
+        border: none !important;
+        border-top: 2px solid var(--old-gold) !important;
+        border-bottom: 2px solid var(--old-gold) !important;
     }
     
-    /* REPARAR EL TÍTULO SEMINAL (HERO) */
-     /* SOLO PARA EL HERO - TOCA BORDES */
-    .seminal-title-container {
-        margin-left: 0 !important;
-        margin-right: 0 !important;
-        padding-left: 0 !important;    /* SIN PADDING LATERAL */
-        padding-right: 0 !important;   /* SIN PADDING LATERAL */
-        width: 100vw !important;       /* ANCHO COMPLETO DE PANTALLA */
-        max-width: 100vw !important;
-        border-radius: 0 !important;   /* SIN BORDES REDONDEADOS */
-        left: 50% !important;
-        right: 50% !important;
-        margin-left: -50vw !important; /* TRUCO PARA CENTRAR Y QUE TOQUE BORDES */
-        position: relative !important;
-        box-sizing: border-box !important;
-    }
-    
-    /* PERO EL TEXTO DENTRO DEL HERO SÍ TIENE MARGEN */
-    .seminal-title-container .main-classic-title,
-    .seminal-title-container .original-title,
-    .seminal-title-container .collection-tag {
-        padding-left: 20px !important;
-        padding-right: 20px !important;
-        box-sizing: border-box !important;
-    }
-    
-    /* LOS METADATOS TAMBIÉN TOCAN BORDES */
-    .archive-metadata {
-        margin-left: 0 !important;
-        margin-right: 0 !important;
-        width: 100vw !important;
-        left: 50% !important;
-        margin-left: -50vw !important;
-        position: relative !important;
-        border-radius: 0 !important;
-    }
-    
-    /* PERO EL TEXTO DE METADATOS SÍ TIENE MARGEN */
+    /* Ajustar las columnas internas */
     .meta-column {
-        padding-left: 20px !important;
-        padding-right: 20px !important;
+        display: block !important;
+        width: 100% !important;
+        padding: 12px 0 !important;
+        border-right: none !important;
+        border-bottom: 1px solid rgba(197, 160, 89, 0.3) !important;
         text-align: center !important;
+        box-sizing: border-box !important;
+    }
+    
+    .meta-column:last-child {
+        border-bottom: none !important;
     }
     
     /* AUTORES CON MARGEN */
