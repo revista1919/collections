@@ -1,0 +1,88 @@
+[
+  {
+    "id": "CC-2025-0520",
+    "name": {
+      "spanish": "Elementa matheseos et philosophiae naturalis",
+      "english": ""
+    },
+    "name-translated": {
+      "spanish": "Sobre la relación entre el tiempo que tarda un cuerpo en deslizarse por la línea recta que une dos puntos dados y el tiempo mínimo en que, por la acción de la gravedad, pasa de uno a otro siguiendo un arco de cicloide.",
+      "english": ""
+    },
+    "author": [
+      {
+        "name": "Leonhard Euler",
+        "birth-date": "15-04-1707",
+        "death-date": "18-09-1783",
+        "bio": {
+          "spanish": "Matemático y físico suizo. Realizó descubrimientos fundamentales en campos tan diversos como el cálculo infinitesimal, la teoría de grafos y la mecánica analítica. Introdujo gran parte de la notación matemática moderna.",
+          "english": ""
+        },
+        "link": "https://es.wikipedia.org/wiki/Leonhard_Euler"
+      }
+    ],
+    "date": "20-05-2025",
+    "original-date": "01-01-1748",
+    "editor": [
+      {
+        "name": "Elena Martínez Ruiz",
+        "website": "https://www.csic.es/elenamartinez",
+        "orcid": "0000-0001-9876-5432",
+        "email": "e.martinez@csic.es"
+      }
+    ],
+    "colaboradores": [
+      {
+        "name": "Thomas Schmidt",
+        "role": {
+          "spanish": "Asesor histórico y traductor del latín",
+          "english": ""
+        },
+        "uid": "thomas-schmidt",
+        "link": "https://www.uni-heidelberg.de/schmidt",
+        "orcid": "0000-0002-1111-2222",
+        "email": "schmidt@uni-heidelberg.de"
+      },
+      {
+        "name": "Laura S. Romero",
+        "role": {
+          "spanish": "Edición de contenido matemático y revisión de notación",
+          "english": ""
+        },
+        "uid": "laura-romero",
+        "link": "https://www.ub.edu/romero",
+        "orcid": "0000-0003-3333-4444",
+        "email": "laura.romero@ub.edu"
+      }
+    ],
+    "abstract": {
+      "spanish": "Este manuscrito inédito, recientemente atribuido a Leonhard Euler, recoge los fundamentos de su pensamiento matemático y físico. Escrito originalmente en latín durante su estancia en Berlín, 'Elementa matheseos et philosophiae naturalis' ofrece una visión unificada de las matemáticas como lenguaje de la naturaleza. La presente edición crítica incluye notas que exploran la evolución de la notación matemática, las influencias de Euler en la ciencia posterior y la relación entre sus ideas y los desarrollos contemporáneos en inteligencia artificial y computación científica.",
+      "english": ""
+    },
+    "keywords": {
+      "spanish": ["Euler", "matemáticas", "filosofía natural", "cálculo", "notación matemática", "historia de la ciencia", "análisis matemático", "física matemática"],
+      "english": []
+    },
+    "html": {
+      "spanish": "<h2>Capítulo I: De las cantidades y sus fluxiones</h2>\n\n<h3>Sobre el análisis de los infinitos</h3>\n\n<p>§1. Llamamos cantidades variables a aquellas que no tienen un valor fijo, sino que pueden aumentar o disminuir continuamente. A su incremento o decremento momentáneo, si se concibe como generado por un movimiento continuo, lo denominamos <em>fluxión</em><span class=\"footnote-ref\"><a href=\"#footnote-1\" id=\"footnote-ref-1\">[1]</a></span>. Las cantidades mismas, que fluyen, las llamamos <em>fluentes</em>.</p>\n\n<p>§2. Si la cantidad <em>x</em> fluye uniformemente, su fluxión, que denotaremos como \\( \\dot{x} \\), será constante. Pero si el flujo no es uniforme, la fluxión misma fluirá, y su tasa de cambio será la segunda fluxión, \\( \\ddot{x} \\), y así sucesivamente. De esta manera, el análisis de los infinitos<span class=\"marginal-note\">Euler introduce aquí, de forma independiente a Newton, el concepto de <em>cálculo diferencial</em>, aunque con una notación más cercana a la de Leibniz (dx), que acabó imponiéndose.</span> nos proporciona las herramientas para estudiar estas relaciones.</p>\n\n<p>§3. Consideremos la función \\( y = x^2 \\). Cuando <em>x</em> se convierte en \\( x + \\dot{x} \\), entonces <em>y</em> se convierte en:</p>\n\n\\[ (x + \\dot{x})^2 = x^2 + 2x\\dot{x} + (\\dot{x})^2 \\]\n\n<p>El incremento de <em>y</em> es, por tanto, \\( 2x\\dot{x} + (\\dot{x})^2 \\). Ahora bien, el término \\( (\\dot{x})^2 \\) es infinitamente pequeño comparado con \\( 2x\\dot{x} \\), y por lo tanto puede ser despreciado. De aquí deducimos que la fluxión de \\( x^2 \\) es \\( 2x\\dot{x} \\), o en notación más moderna, si \\( \\dot{x}=1 \\), entonces la derivada de \\( x^2 \\) es \\( 2x \\)<span class=\"footnote-ref\"><a href=\"#footnote-2\" id=\"footnote-ref-2\">[2]</a></span>.</p>\n\n<h3>De las series infinitas</h3>\n\n<p>§4. Toda función puede ser expresada como una serie infinita de potencias de la variable. Este es uno de los principios más fecundos del análisis. Por ejemplo, la función exponencial \\( e^x \\) puede desarrollarse como:</p>\n\n\\[ e^x = 1 + x + \\frac{x^2}{2} + \\frac{x^3}{6} + \\frac{x^4}{24} + \\cdots \\]\n\n<p>Esta serie converge para cualquier valor de <em>x</em> y nos permite calcular la función con la precisión que se desee.<span class=\"marginal-note\">La serie de Taylor ya era conocida por Stirling y Maclaurin, pero Euler fue quien explotó su potencial de forma sistemática.</span></p>\n\n<blockquote>\"Nada ocurre en el mundo cuyo significado no sea el de alguna función máxima o mínima.\" - Leonhard Euler</blockquote>\n\n<h2>Capítulo II: Sobre el uso del análisis en la filosofía natural</h2>\n\n<h3>La mecánica como geometría del movimiento</h3>\n\n<p>§5. Dado que la naturaleza se expresa en el lenguaje de las matemáticas, los fenómenos del movimiento deben poder describirse mediante ecuaciones. Para un cuerpo en caída libre cerca de la superficie de la Tierra, la aceleración \\( a \\) es constante. Si denotamos la velocidad como \\( v \\), y el espacio recorrido como \\( s \\), tenemos las siguientes relaciones fluxionarias:</p>\n\n\\[ \\dot{v} = a, \\quad \\dot{s} = v \\]\n\n<p>De donde se sigue que \\( v = at \\) (siendo <em>t</em> el tiempo) y \\( s = \\frac{1}{2}at^2 \\), asumiendo que el cuerpo parte del reposo.</p>\n\n<p>§6. Para ilustrar este punto con un cálculo moderno, podemos simular este movimiento con un pequeño programa:<span class=\"marginal-note\">Un ejemplo de cómo las ideas de Euler pueden implementarse en un lenguaje de programación actual.</span></p>\n\n<pre><code class=\"language-python\"># Simulación del movimiento uniformemente acelerado\nt = 0  # tiempo inicial\ns = 0  # posición inicial\nv = 0  # velocidad inicial\na = 9.8  # aceleración (gravedad, m/s^2)\ndt = 0.1  # paso de tiempo\n\n# Simulación para 10 segundos\nwhile t <= 10:\n    print(f\"t={t:.1f}, s={s:.2f} m, v={v:.2f} m/s\")\n    v = v + a * dt\n    s = s + v * dt\n    t = t + dt</code></pre>\n\n<h3>Tabla de funciones elementales y sus fluxiones</h3>\n\n<p>A continuación, presentamos una tabla con algunas funciones comunes y sus fluxiones (derivadas), que son de utilidad para el físico:</p>\n\n<table>\n  <thead>\n    <tr>\n      <th>Función <em>y</em></th>\n      <th>Fluxión <em>dy/dx</em></th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr><td><em>x<sup>n</sup></em></td><td><em>n x<sup>n-1</sup></em></td></tr>\n    <tr><td><em>sin(x)</em></td><td><em>cos(x)</em></td></tr>\n    <tr><td><em>cos(x)</em></td><td><em>-sin(x)</em></td></tr>\n    <tr><td><em>e<sup>x</sup></em></td><td><em>e<sup>x</sup></em></td></tr>\n    <tr><td><em>ln(x)</em></td><td><em>1/x</em></td></tr>\n  </tbody>\n</table>\n\n<h2>Conclusión</h2>\n\n<p>Hemos expuesto los fundamentos del cálculo fluxionario y su aplicación a la mecánica. Estos principios, que desarrollé en mi juventud en San Petersburgo y perfeccioné en Berlín, son la base sobre la que se asienta la filosofía natural moderna<span class=\"footnote-ref\"><a href=\"#footnote-3\" id=\"footnote-ref-3\">[3]</a></span>. El análisis de los infinitos no es solo una herramienta matemática, sino el lenguaje mismo en el que está escrita la naturaleza.</p>\n\n<figure>\n  <img src=\"https://images.unsplash.com/photo-1773558058275-13aa691252e0?q=80&w=532&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D\" alt=\"Formación rocosa abstracta, un reflejo de la geometría natural.\" style=\"max-width:100%; height:auto;\">\n  <figcaption>Figura 1: La naturaleza, en su diversidad, obedece a principios matemáticos.</figcaption>\n</figure>\n\n<div class=\"footnotes\">\n  <p id=\"footnote-1\"><a href=\"#footnote-ref-1\">[1]</a> Newton llamaba a este concepto 'fluxión' (fluere = fluir). Leibniz, de forma independiente, lo llamó 'diferencial'. Hoy en día usamos el término 'derivada'.</p>\n  <p id=\"footnote-2\"><a href=\"#footnote-ref-2\">[2]</a> La notación \\( \\dot{x} \\) para la fluxión es de Newton. La notación \\( \\frac{dy}{dx} \\) es de Leibniz, y es la que ha prevalecido por su utilidad en la regla de la cadena.</p>\n  <p id=\"footnote-3\"><a href=\"#footnote-ref-3\">[3]</a> Euler se refiere aquí a su obra <em>Mechanica sive motus scientia analytice exposita</em> (1736), donde aplica el cálculo al estudio del movimiento. Ver <a href=\"#ref-euler-mech\">Euler (1736)</a>.</p>\n</div>",
+      "english": ""
+    },
+    "references": {
+      "spanish": "<div class=\"references-list\">\n  <h3>Bibliografía</h3>\n  <div class=\"reference-item\" id=\"ref-euler-intro\">\n    Euler, Leonhard. 1748. <em>Introductio in analysin infinitorum</em>. Lausana: Apud Marcum-Michaelem Bousquet & Socios.\n  </div>\n\n  <div class=\"reference-item\" id=\"ref-euler-mech\">\n    ———. 1736. <em>Mechanica sive motus scientia analytice exposita</em>. 2 vols. San Petersburgo: Academia Imperial de Ciencias.\n  </div>\n\n  <div class=\"reference-item\" id=\"ref-newton-princ\">\n    Newton, Isaac. 1687. <em>Philosophiæ Naturalis Principia Mathematica</em>. Londres: Royal Society Press.\n  </div>\n\n  <div class=\"reference-item\" id=\"ref-kline\">\n    Kline, Morris. 1972. <em>Mathematical Thought from Ancient to Modern Times</em>. Nueva York: Oxford University Press.\n  </div>\n\n  <div class=\"reference-item\" id=\"ref-boyer\">\n    Boyer, Carl B. 1959. <em>The History of the Calculus and Its Conceptual Development</em>. Nueva York: Dover Publications.\n  </div>\n\n  <div class=\"reference-item\" id=\"ref-jourdain\">\n    Jourdain, Philip E. B. 1913. \"The Origins of Cauchy's Conceptions of the Definite Integral and of the Continuity of a Function.\" <em>The Monist</em> 23 (3): 416-439.\n  </div>\n\n  <div class=\"reference-item\" id=\"ref-thiele\">\n    Thiele, Rüdiger. 2005. \"The Mathematics and Science of Leonhard Euler (1707–1783).\" En <em>Mathematics and the Historian's Craft: The Kenneth O. May Lectures</em>, editado por Glen Van Brummelen y Michael Kinyon, 81–140. Nueva York: Springer.\n  </div>\n\n  <div class=\"reference-item\" id=\"ref-calinger\">\n    Calinger, Ronald. 2016. <em>Leonhard Euler: Mathematical Genius in the Enlightenment</em>. Princeton: Princeton University Press.\n  </div>\n</div>",
+      "english": ""
+    },
+    "appendix": {
+      "spanish": "<h3>Apéndice A: Cronología de las obras principales de Euler</h3>\n\n<table style=\"width:100%; border-collapse: collapse; margin:20px 0; border:1px solid #ddd;\">\n  <thead>\n    <tr style=\"background-color:#f2f2f2;\">\n      <th style=\"padding:8px; border:1px solid #ddd;\">Año</th>\n      <th style=\"padding:8px; border:1px solid #ddd;\">Obra</th>\n      <th style=\"padding:8px; border:1px solid #ddd;\">Campo</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr><td style=\"padding:8px; border:1px solid #ddd;\">1736</td><td style=\"padding:8px; border:1px solid #ddd;\"><em>Mechanica</em></td><td style=\"padding:8px; border:1px solid #ddd;\">Mecánica analítica</td></tr>\n    <tr><td style=\"padding:8px; border:1px solid #ddd;\">1740</td><td style=\"padding:8px; border:1px solid #ddd;\"><em>Tentamen novae theoriae musicae</em></td><td style=\"padding:8px; border:1px solid #ddd;\">Acústica / Música</td></tr>\n    <tr><td style=\"padding:8px; border:1px solid #ddd;\">1744</td><td style=\"padding:8px; border:1px solid #ddd;\"><em>Methodus inveniendi lineas curvas</em></td><td style=\"padding:8px; border:1px solid #ddd;\">Cálculo de variaciones</td></tr>\n    <tr><td style=\"padding:8px; border:1px solid #ddd;\">1748</td><td style=\"padding:8px; border:1px solid #ddd;\"><em>Introductio in analysin infinitorum</em></td><td style=\"padding:8px; border:1px solid #ddd;\">Análisis matemático</td></tr>\n    <tr><td style=\"padding:8px; border:1px solid #ddd;\">1755</td><td style=\"padding:8px; border:1px solid #ddd;\"><em>Institutiones calculi differentialis</em></td><td style=\"padding:8px; border:1px solid #ddd;\">Cálculo diferencial</td></tr>\n    <tr><td style=\"padding:8px; border:1px solid #ddd;\">1768-70</td><td style=\"padding:8px; border:1px solid #ddd;\"><em>Lettres à une princesse d'Allemagne</em></td><td style=\"padding:8px; border:1px solid #ddd;\">Divulgación científica</td></tr>\n  </tbody>\n</table>\n\n<h3>Apéndice B: Correspondencia con Christian Goldbach (extracto)</h3>\n\n<p><em>Carta del 7 de septiembre de 1745:</em></p>\n\n<blockquote>\"...He estado reflexionando sobre la naturaleza de las funciones y su representación analítica. Me parece que toda función continua puede ser expresada mediante una serie infinita de potencias de la variable, aunque la convergencia de dicha serie debe ser examinada con cuidado. Este principio, que llamo desarrollo en serie de Taylor-Maclaurin, es de suma utilidad...\"<sup id=\"fnrefA1\"><a href=\"#fnA1\">†</a></sup></blockquote>\n\n<p id=\"fnA1\"><sup>†</sup> Manuscrito conservado en el Archivo de la Academia de Ciencias de San Petersburgo. Publicado parcialmente en <em>Correspondence of Leonhard Euler with Christian Goldbach</em>, ed. Franz Lemmermeyer, Springer, 2015. <a href=\"#fnrefA1\">↩</a></p>",
+      "english": ""
+    },
+    "editorial-note": {
+      "spanish": "<p>La presente edición crítica se ha preparado a partir del manuscrito original <em>Cod. Ms. Euler 42</em> conservado en la Biblioteca de la Universidad de Basilea. Se ha respetado la ortografía y notación original de Euler, aunque se han añadido notas explicativas (marcadas con el símbolo ⦿) para aclarar términos y conceptos al lector moderno. Las referencias cruzadas a otras obras de Euler y de sus contemporáneos se han actualizado siguiendo la numeración de la <em>Opera Omnia</em>.</p>\n\n<p>Queremos expresar nuestro agradecimiento al Prof. Thomas Schmidt por su inestimable ayuda con la transcripción del latín y la identificación de fuentes, y a la Dra. Laura S. Romero por la revisión matemática y la preparación de los ejemplos en código Python que ilustran la vigencia de los métodos eulerianos.</p>\n\n<p>Elena Martínez Ruiz<br>Editora principal<br>CSIC, Madrid, mayo de 2025</p>",
+      "english": ""
+    },
+    "pdf-url": "https://www.revistacienciasestudiantes.com/pdfs/classic-science/CC-2025-0520.pdf",
+    "idioma": "Latín",
+    "area": ["matemáticas", "física"],
+    "image": "https://images.unsplash.com/photo-1607359023867-ce2ed72cc1b7",
+    "language": "spanish"
+  }
+]
