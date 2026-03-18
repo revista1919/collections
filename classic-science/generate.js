@@ -4455,128 +4455,222 @@ blockquote cite {
   }
   
 }
-  /* ===== SOLUCIÓN DEFINITIVA PARA MÓVIL: MÁRGENES Y DESBORDAMIENTO ===== */
-
-/* 1. REGLA UNIVERSAL: Todo respeta el ancho de la pantalla */
-* {
-    max-width: 100vw !important;  /* ¡Ningún elemento será más ancho que la pantalla! */
-    box-sizing: border-box !important; /* El padding y borde se incluyen en el ancho */
-    overflow-wrap: break-word !important; /* Las palabras largas se rompen */
-    word-wrap: break-word !important;
-}
-
-/* 2. EL BODY: Nunca se desborda horizontalmente */
-body {
-    overflow-x: hidden !important; /* Oculta cualquier desbordamiento horizontal */
-    width: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    position: relative !important;
-}
-
-/* 3. CONTENEDOR PRINCIPAL: Padding universal para que el texto NO toque los bordes */
-.main-wrapper {
-    padding-left: 20px !important;
-    padding-right: 20px !important;
-    width: 100% !important;
-    max-width: 1400px !important; /* Mantiene el ancho máximo en escritorio */
-    margin: 0 auto !important;     /* Centrado */
-    box-sizing: border-box !important;
-}
-
-/* 4. HEADER: Se asegura de que esté alineado y no se desborde */
-.sd-header {
-    width: 100% !important;
-    overflow-x: hidden !important;
-}
-
-.sd-header-top {
-    max-width: 100% !important;
-    padding-left: 20px !important;
-    padding-right: 20px !important;
-    box-sizing: border-box !important;
-}
-
-/* 5. CONTENIDO DEL ARTÍCULO: Padding adicional para legibilidad */
-.article-content {
-    padding-left: 10px !important;
-    padding-right: 10px !important;
-    max-width: 100% !important;
-    overflow-x: hidden !important;
-}
-
-/* 6. CONTENEDOR SEMINAL DEL TÍTULO: Sin desbordes */
-.seminal-title-container {
-    max-width: 100% !important;
-    box-sizing: border-box !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    padding-left: 15px !important;
-    padding-right: 15px !important;
-    overflow-x: hidden !important;
-}
-
-/* 7. ARCHIVE METADATA: Corrección del ancho y padding */
-.archive-metadata {
-    width: 100% !important;
-    box-sizing: border-box !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    padding-left: 20px !important;
-    padding-right: 20px !important;
-    display: flex !important;
-    flex-wrap: wrap !important; /* Permite que los elementos se envuelvan */
-}
-
-/* 8. TABLAS, BLOQUES DE CÓDIGO Y ELEMENTOS ESPECIALES: Con scroll horizontal si son muy anchos */
-.table-wrapper,
-.code-block-wrapper,
-pre,
-.math-container,
-.MathJax_Display,
-.equation-specimen {
-    max-width: 100% !important;
-    overflow-x: auto !important;  /* Añade scroll horizontal si es necesario */
-    -webkit-overflow-scrolling: touch !important; /* Scroll suave en iOS */
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-}
-
-/* 9. IMÁGENES: Nunca más anchas que su contenedor */
-.article-image {
-    max-width: 100% !important;
-    height: auto !important;
-}
-
-/* 10. NOTAS MARGINALES Y SIDENOTES: Evitar que floten fuera en móvil */
-@media (max-width: 1100px) {
-    .sidenote,
-    .margin-note,
-    .math-annotation {
-        float: none !important;
+  /* ===== SOLUCIÓN DE EMERGENCIA PARA MÓVIL ===== */
+@media (max-width: 768px) {
+    
+    /* RESET TOTAL */
+    .main-wrapper,
+    .article-container,
+    .seminal-title-container,
+    .archive-metadata,
+    .sd-header-top,
+    .article-content,
+    .pdf-preview-section,
+    .mobile-info {
+        display: block !important;
         width: 100% !important;
-        margin-left: 0 !important;
-        margin-right: 0 !important;
+        max-width: 100% !important;
+        margin: 0 auto !important;
         padding-left: 15px !important;
         padding-right: 15px !important;
         box-sizing: border-box !important;
-        position: static !important;
-        right: auto !important;
-        left: auto !important;
+        float: none !important;
+        clear: both !important;
     }
     
-    /* Corrección para anotaciones de ecuaciones en móvil */
-    .math-annotation {
-        border-left: 2px solid var(--old-gold) !important;
+    /* ELIMINAR TODOS LOS MÁRGENES NEGATIVOS QUE DESCUADRAN */
+    .archive-metadata {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        margin-top: 20px !important;
+        margin-bottom: 20px !important;
+        width: 100% !important;
+        left: 0 !important;
+        right: 0 !important;
+        transform: none !important;
+    }
+    
+    /* REPARAR EL TÍTULO SEMINAL (HERO) */
+    .seminal-title-container {
+        margin: 20px auto !important;
+        padding: 40px 20px !important; /* MÁS MARGEN INTERNO */
+        border: 1px solid rgba(197, 160, 89, 0.4) !important;
+        outline: none !important; /* QUITAR EL OUTLINE QUE PUEDE DESBORDAR */
+        outline-offset: 0 !important;
+    }
+    
+    /* TEXTO DEL TÍTULO CON MÁRGENES */
+    .main-classic-title {
+        font-size: 2rem !important;
+        padding: 0 10px !important;
+        margin: 10px 0 !important;
+        word-wrap: break-word !important;
+        text-align: center !important;
+    }
+    
+    .original-title {
+        padding: 0 15px !important;
+        text-align: center !important;
+    }
+    
+    /* COLUMNAS DE METADATOS UNA DEBAJO DE OTRA */
+    .meta-column {
+        display: block !important;
+        width: 100% !important;
+        padding: 10px 0 !important;
         border-right: none !important;
-        margin-top: 10px !important;
-        margin-bottom: 10px !important;
+        border-bottom: 1px solid rgba(197, 160, 89, 0.3) !important;
+        text-align: center !important;
+    }
+    
+    .meta-column:last-child {
+        border-bottom: none !important;
+    }
+    
+    /* AUTORES CON MARGEN */
+    .authors-section {
+        padding: 0 15px !important;
+    }
+    
+    .authors {
+        justify-content: center !important;
+        text-align: center !important;
+    }
+    
+    /* BARRA DE ACCIONES */
+    .action-bar {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 10px !important;
+        padding: 20px 15px !important;
+    }
+    
+    .btn-pdf {
+        justify-content: center !important;
+        width: 100% !important;
+    }
+    
+    /* NOTAS MARGINALES QUE PUEDEN DESBORDAR */
+    .sidenote,
+    .margin-note,
+    .footnote-content {
+        position: static !important;
+        float: none !important;
+        width: 100% !important;
+        margin: 15px 0 !important;
+        padding: 15px !important;
+        left: auto !important;
+        right: auto !important;
+        bottom: auto !important;
+        max-width: 100% !important;
+    }
+    
+    /* ELIMINAR EL POPUP DE NOTAS QUE SE SALÍA */
+    .footnote-content {
+        display: block !important; /* SIEMPRE VISIBLE EN MÓVIL */
+        position: static !important;
+        background: var(--bg-soft) !important;
+        border-left: 4px solid var(--oxford-blue) !important;
+        box-shadow: none !important;
+        margin: 10px 0 !important;
+    }
+    
+    /* REPARAR EL FOOTER */
+    .footer-container {
+        padding: 20px 15px !important;
+    }
+    
+    .footer-social {
+        flex-wrap: wrap !important;
+        gap: 20px !important;
+    }
+    
+    /* REPARAR PDF */
+    .pdf-preview-container {
+        height: 400px !important;
+        margin: 0 0 20px 0 !important;
+    }
+    
+    /* REPARAR TABS MÓVILES */
+    .mobile-info {
+        margin-top: 30px !important;
+        padding: 0 !important;
+    }
+    
+    .tab-buttons {
+        flex-wrap: wrap !important;
+    }
+    
+    .tab-button {
+        flex: 1 1 auto !important;
+        min-width: 100px !important;
+        padding: 12px 5px !important;
+        font-size: 0.8rem !important;
+    }
+    
+    .tab-panel {
+        padding: 20px 15px !important;
+    }
+    
+    /* TABLAS Y CÓDIGO CON SCROLL */
+    .table-wrapper,
+    .code-block-wrapper {
+        margin: 15px 0 !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+    
+    .article-table {
+        min-width: 500px !important; /* PARA FORZAR SCROLL SI ES NECESARIO */
+    }
+    
+    /* IMÁGENES FLOTANTES SE VUELVEN NORMALES */
+    .image-figure.float-left,
+    .image-figure.float-right {
+        float: none !important;
+        margin: 20px auto !important;
+        max-width: 100% !important;
+        text-align: center !important;
+    }
+    
+    /* EVITAR QUE APAREZCA SCROLL HORIZONTAL */
+    html, body {
+        overflow-x: hidden !important;
+        width: 100% !important;
+        position: relative !important;
+    }
+    
+    /* ARREGLAR CUALQUIER ELEMENTO CON POSICIONAMIENTO ABSOLUTO */
+    [style*="position: absolute"],
+    [style*="position:absolute"] {
+        position: relative !important;
+        left: auto !important;
+        right: auto !important;
+        transform: none !important;
     }
 }
 
-/* 11. REGLA EXTRA: Cualquier elemento que pueda causar desbordamiento */
-iframe, embed, object, video {
-    max-width: 100% !important;
+/* REGLAS ADICIONALES PARA PANTALLAS MUY PEQUEÑAS */
+@media (max-width: 480px) {
+    .seminal-title-container {
+        padding: 30px 15px !important;
+    }
+    
+    .main-classic-title {
+        font-size: 1.6rem !important;
+    }
+    
+    .collection-tag {
+        font-size: 0.7rem !important;
+    }
+    
+    .meta-value {
+        font-size: 0.8rem !important;
+    }
+    
+    .pdf-preview-container {
+        height: 300px !important;
+    }
 }
   </style>
 </head>

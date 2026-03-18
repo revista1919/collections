@@ -2955,6 +2955,224 @@ blockquote cite {
     margin: 1.5rem 1rem;
     font-size: 1rem;
   }
+  
+}
+  /* ===== SOLUCIÓN DE EMERGENCIA PARA MÓVIL ===== */
+@media (max-width: 768px) {
+    
+    /* RESET TOTAL */
+    .main-wrapper,
+    .article-container,
+    .seminal-title-container,
+    .archive-metadata,
+    .sd-header-top,
+    .article-content,
+    .pdf-preview-section,
+    .mobile-info {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 auto !important;
+        padding-left: 15px !important;
+        padding-right: 15px !important;
+        box-sizing: border-box !important;
+        float: none !important;
+        clear: both !important;
+    }
+    
+    /* ELIMINAR TODOS LOS MÁRGENES NEGATIVOS QUE DESCUADRAN */
+    .archive-metadata {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        margin-top: 20px !important;
+        margin-bottom: 20px !important;
+        width: 100% !important;
+        left: 0 !important;
+        right: 0 !important;
+        transform: none !important;
+    }
+    
+    /* REPARAR EL TÍTULO SEMINAL (HERO) */
+    .seminal-title-container {
+        margin: 20px auto !important;
+        padding: 40px 20px !important; /* MÁS MARGEN INTERNO */
+        border: 1px solid rgba(197, 160, 89, 0.4) !important;
+        outline: none !important; /* QUITAR EL OUTLINE QUE PUEDE DESBORDAR */
+        outline-offset: 0 !important;
+    }
+    
+    /* TEXTO DEL TÍTULO CON MÁRGENES */
+    .main-classic-title {
+        font-size: 2rem !important;
+        padding: 0 10px !important;
+        margin: 10px 0 !important;
+        word-wrap: break-word !important;
+        text-align: center !important;
+    }
+    
+    .original-title {
+        padding: 0 15px !important;
+        text-align: center !important;
+    }
+    
+    /* COLUMNAS DE METADATOS UNA DEBAJO DE OTRA */
+    .meta-column {
+        display: block !important;
+        width: 100% !important;
+        padding: 10px 0 !important;
+        border-right: none !important;
+        border-bottom: 1px solid rgba(197, 160, 89, 0.3) !important;
+        text-align: center !important;
+    }
+    
+    .meta-column:last-child {
+        border-bottom: none !important;
+    }
+    
+    /* AUTORES CON MARGEN */
+    .authors-section {
+        padding: 0 15px !important;
+    }
+    
+    .authors {
+        justify-content: center !important;
+        text-align: center !important;
+    }
+    
+    /* BARRA DE ACCIONES */
+    .action-bar {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 10px !important;
+        padding: 20px 15px !important;
+    }
+    
+    .btn-pdf {
+        justify-content: center !important;
+        width: 100% !important;
+    }
+    
+    /* NOTAS MARGINALES QUE PUEDEN DESBORDAR */
+    .sidenote,
+    .margin-note,
+    .footnote-content {
+        position: static !important;
+        float: none !important;
+        width: 100% !important;
+        margin: 15px 0 !important;
+        padding: 15px !important;
+        left: auto !important;
+        right: auto !important;
+        bottom: auto !important;
+        max-width: 100% !important;
+    }
+    
+    /* ELIMINAR EL POPUP DE NOTAS QUE SE SALÍA */
+    .footnote-content {
+        display: block !important; /* SIEMPRE VISIBLE EN MÓVIL */
+        position: static !important;
+        background: var(--bg-soft) !important;
+        border-left: 4px solid var(--oxford-blue) !important;
+        box-shadow: none !important;
+        margin: 10px 0 !important;
+    }
+    
+    /* REPARAR EL FOOTER */
+    .footer-container {
+        padding: 20px 15px !important;
+    }
+    
+    .footer-social {
+        flex-wrap: wrap !important;
+        gap: 20px !important;
+    }
+    
+    /* REPARAR PDF */
+    .pdf-preview-container {
+        height: 400px !important;
+        margin: 0 0 20px 0 !important;
+    }
+    
+    /* REPARAR TABS MÓVILES */
+    .mobile-info {
+        margin-top: 30px !important;
+        padding: 0 !important;
+    }
+    
+    .tab-buttons {
+        flex-wrap: wrap !important;
+    }
+    
+    .tab-button {
+        flex: 1 1 auto !important;
+        min-width: 100px !important;
+        padding: 12px 5px !important;
+        font-size: 0.8rem !important;
+    }
+    
+    .tab-panel {
+        padding: 20px 15px !important;
+    }
+    
+    /* TABLAS Y CÓDIGO CON SCROLL */
+    .table-wrapper,
+    .code-block-wrapper {
+        margin: 15px 0 !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+    
+    .article-table {
+        min-width: 500px !important; /* PARA FORZAR SCROLL SI ES NECESARIO */
+    }
+    
+    /* IMÁGENES FLOTANTES SE VUELVEN NORMALES */
+    .image-figure.float-left,
+    .image-figure.float-right {
+        float: none !important;
+        margin: 20px auto !important;
+        max-width: 100% !important;
+        text-align: center !important;
+    }
+    
+    /* EVITAR QUE APAREZCA SCROLL HORIZONTAL */
+    html, body {
+        overflow-x: hidden !important;
+        width: 100% !important;
+        position: relative !important;
+    }
+    
+    /* ARREGLAR CUALQUIER ELEMENTO CON POSICIONAMIENTO ABSOLUTO */
+    [style*="position: absolute"],
+    [style*="position:absolute"] {
+        position: relative !important;
+        left: auto !important;
+        right: auto !important;
+        transform: none !important;
+    }
+}
+
+/* REGLAS ADICIONALES PARA PANTALLAS MUY PEQUEÑAS */
+@media (max-width: 480px) {
+    .seminal-title-container {
+        padding: 30px 15px !important;
+    }
+    
+    .main-classic-title {
+        font-size: 1.6rem !important;
+    }
+    
+    .collection-tag {
+        font-size: 0.7rem !important;
+    }
+    
+    .meta-value {
+        font-size: 0.8rem !important;
+    }
+    
+    .pdf-preview-container {
+        height: 300px !important;
+    }
 }
   </style>
 </head>
@@ -2973,7 +3191,7 @@ blockquote cite {
       </div>
       
       <div class="sd-search-wrapper">
-  <form id="search-form" class="sd-search-bar" action="/collections/classic-science/" method="GET">
+  <form id="search-form" class="sd-search-bar" action="/collection/classic-science/" method="GET">
     <svg class="sd-search-icon" viewBox="0 0 24 24" width="18" height="18">
       <path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
     </svg>
@@ -2982,7 +3200,7 @@ blockquote cite {
 </div>
       
       <div class="sd-user-nav">
-        <a href="/collections/classic-science/" class="sd-nav-link">Clásicos</a>
+        <a href="/collection/classic-science/" class="sd-nav-link">Clásicos</a>
         <a href="/" class="sd-nav-link">Inicio</a>
       </div>
       
@@ -3012,7 +3230,7 @@ blockquote cite {
     
     <!-- Búsqueda móvil -->
     <div class="sd-mobile-search">
-  <form id="mobile-search-form" class="sd-mobile-search-bar" action="/collections/classic-science/" method="GET">
+  <form id="mobile-search-form" class="sd-mobile-search-bar" action="/collection/classic-science/" method="GET">
     <svg width="16" height="16" viewBox="0 0 24 24">
       <path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
     </svg>
@@ -3833,7 +4051,7 @@ while t </code></pre>
       </div>
 
       <div class="footer-nav-links">
-        <a href="/collections/classic-science/" class="footer-nav-link">
+        <a href="/collection/classic-science/" class="footer-nav-link">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
             <path d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z"/>
           </svg>
