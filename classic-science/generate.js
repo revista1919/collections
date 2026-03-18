@@ -4491,40 +4491,47 @@ blockquote cite {
     }
     
     /* REPARAR EL TÍTULO SEMINAL (HERO) */
+     /* SOLO PARA EL HERO - TOCA BORDES */
     .seminal-title-container {
-        margin: 20px auto !important;
-        padding: 40px 20px !important; /* MÁS MARGEN INTERNO */
-        border: 1px solid rgba(197, 160, 89, 0.4) !important;
-        outline: none !important; /* QUITAR EL OUTLINE QUE PUEDE DESBORDAR */
-        outline-offset: 0 !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        padding-left: 0 !important;    /* SIN PADDING LATERAL */
+        padding-right: 0 !important;   /* SIN PADDING LATERAL */
+        width: 100vw !important;       /* ANCHO COMPLETO DE PANTALLA */
+        max-width: 100vw !important;
+        border-radius: 0 !important;   /* SIN BORDES REDONDEADOS */
+        left: 50% !important;
+        right: 50% !important;
+        margin-left: -50vw !important; /* TRUCO PARA CENTRAR Y QUE TOQUE BORDES */
+        position: relative !important;
+        box-sizing: border-box !important;
     }
     
-    /* TEXTO DEL TÍTULO CON MÁRGENES */
-    .main-classic-title {
-        font-size: 2rem !important;
-        padding: 0 10px !important;
-        margin: 10px 0 !important;
-        word-wrap: break-word !important;
-        text-align: center !important;
+    /* PERO EL TEXTO DENTRO DEL HERO SÍ TIENE MARGEN */
+    .seminal-title-container .main-classic-title,
+    .seminal-title-container .original-title,
+    .seminal-title-container .collection-tag {
+        padding-left: 20px !important;
+        padding-right: 20px !important;
+        box-sizing: border-box !important;
     }
     
-    .original-title {
-        padding: 0 15px !important;
-        text-align: center !important;
+    /* LOS METADATOS TAMBIÉN TOCAN BORDES */
+    .archive-metadata {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        width: 100vw !important;
+        left: 50% !important;
+        margin-left: -50vw !important;
+        position: relative !important;
+        border-radius: 0 !important;
     }
     
-    /* COLUMNAS DE METADATOS UNA DEBAJO DE OTRA */
+    /* PERO EL TEXTO DE METADATOS SÍ TIENE MARGEN */
     .meta-column {
-        display: block !important;
-        width: 100% !important;
-        padding: 10px 0 !important;
-        border-right: none !important;
-        border-bottom: 1px solid rgba(197, 160, 89, 0.3) !important;
+        padding-left: 20px !important;
+        padding-right: 20px !important;
         text-align: center !important;
-    }
-    
-    .meta-column:last-child {
-        border-bottom: none !important;
     }
     
     /* AUTORES CON MARGEN */
