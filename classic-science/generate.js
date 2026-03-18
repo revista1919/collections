@@ -4471,7 +4471,7 @@ blockquote cite {
       </div>
       
       <div class="sd-search-wrapper">
-  <form id="search-form" class="sd-search-bar" action="/collections/classic-science/" method="GET">
+  <form id="search-form" class="sd-search-bar" action="/collection/classic-science/" method="GET">
     <svg class="sd-search-icon" viewBox="0 0 24 24" width="18" height="18">
       <path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
     </svg>
@@ -4480,7 +4480,7 @@ blockquote cite {
 </div>
       
       <div class="sd-user-nav">
-        <a href="/collections/classic-science/" class="sd-nav-link">Clásicos</a>
+        <a href="/collection/classic-science/" class="sd-nav-link">Clásicos</a>
         <a href="/" class="sd-nav-link">Inicio</a>
       </div>
       
@@ -4510,7 +4510,7 @@ blockquote cite {
     
     <!-- Búsqueda móvil -->
     <div class="sd-mobile-search">
-  <form id="mobile-search-form" class="sd-mobile-search-bar" action="/collections/classic-science/" method="GET">
+  <form id="mobile-search-form" class="sd-mobile-search-bar" action="/collection/classic-science/" method="GET">
     <svg width="16" height="16" viewBox="0 0 24 24">
       <path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
     </svg>
@@ -4937,7 +4937,7 @@ ${editorialNoteHtml ? `
       </div>
 
       <div class="footer-nav-links">
-        <a href="/collections/classic-science/" class="footer-nav-link">
+        <a href="/collection/classic-science/" class="footer-nav-link">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
             <path d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z"/>
           </svg>
